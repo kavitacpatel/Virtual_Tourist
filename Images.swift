@@ -2,7 +2,7 @@
 //  Images.swift
 //  Virtual-Tourist
 //
-//  Created by kavita patel on 5/4/16.
+//  Created by kavita patel on 5/6/16.
 //  Copyright © 2016 kavita patel. All rights reserved.
 //
 
