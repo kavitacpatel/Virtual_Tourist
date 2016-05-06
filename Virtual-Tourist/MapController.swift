@@ -12,7 +12,6 @@ import CoreData
 
 class MapController: UIViewController, MKMapViewDelegate
 {
-
     @IBOutlet var gestureRecognize: UILongPressGestureRecognizer!
     @IBOutlet weak var activityInd: UIActivityIndicatorView!
     @IBOutlet weak var mapView: MKMapView!
@@ -20,6 +19,7 @@ class MapController: UIViewController, MKMapViewDelegate
     @IBOutlet weak var deleteLbl: UILabel!
     var editState = false
     var pointAnnotation = MKPointAnnotation()
+    
     override func viewDidLoad()
     {
         super.viewDidLoad()
@@ -35,7 +35,7 @@ class MapController: UIViewController, MKMapViewDelegate
     func getLocation()
     {
         var span = MKCoordinateSpan()
-        LocationClass.sharedInstance.getLocation { (locations, error) in
+        Pin.pinInstance.getLocation { (locations, error) in
             if error != ""
             {
                 self.alertMsg("Location Error", msg: error)
@@ -75,13 +75,13 @@ class MapController: UIViewController, MKMapViewDelegate
     }
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView)
     {
-        let lati = view.annotation?.coordinate.latitude
-        let long = view.annotation?.coordinate.longitude
+        
+        let newcoordinate = CLLocationCoordinate2D(latitude: (view.annotation?.coordinate.latitude)!, longitude: (view.annotation?.coordinate.longitude)!)
         if editState
         {
-            
+            //Delete selected pin
             self.mapView.removeAnnotation(view.annotation!)
-          LocationClass.sharedInstance.deleteLocation(lati!, long: long!, completion: { (error) in
+          Pin.pinInstance.deleteLocation(newcoordinate, completion: { (error) in
             if error != ""
             {
                 self.alertMsg("Delete Location", msg: error)
@@ -94,8 +94,7 @@ class MapController: UIViewController, MKMapViewDelegate
         }
         else
         {
-            pointAnnotation.coordinate.latitude = lati!
-            pointAnnotation.coordinate.longitude = long!
+            pointAnnotation.coordinate = newcoordinate
             performSegueWithIdentifier("detailSegue", sender: self)
         }
     }
@@ -130,14 +129,15 @@ class MapController: UIViewController, MKMapViewDelegate
          annotation.coordinate = coordinate
          mapView.addAnnotation(annotation)
          mapSpan = mapView.region.span
-        LocationClass.sharedInstance.saveLocation(coordinate, span: mapSpan, completion: { (error) in
-                if error != ""
-                {
-                    self.alertMsg("Location Error", msg: error)
-                }
-            })
-
-     }
+         // get data of dropped pin location
+         let flickrObj = FlickrApi()
+        flickrObj.getFlickrData(1, coordinate: coordinate,span: mapSpan, completion: { (error) in
+            if error != ""
+            {
+                self.alertMsg("Error: SaveImages", msg: error!)
+            }
+        })
+        }
     }
     func alertMsg(title: String, msg: String)
     {

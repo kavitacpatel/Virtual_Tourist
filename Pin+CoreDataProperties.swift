@@ -20,5 +20,8 @@ extension Pin {
     @NSManaged var longitudeDelta: NSNumber?
     @NSManaged var page: NSNumber?
     @NSManaged var images: NSSet?
-
+    func addImageObject(value:Images) {
+        let image = self.mutableSetValueForKey("images");
+        image.addObject(value)
+    }
 }

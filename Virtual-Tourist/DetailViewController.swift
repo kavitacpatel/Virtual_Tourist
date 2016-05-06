@@ -21,11 +21,9 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     var coordinate = CLLocationCoordinate2D()
     var imageArray:[UIImage] = [UIImage]()
     let flickrObj = FlickrApi()
-    var page: Int = 1
     var screenSize: CGRect!
     var screenWidth: CGFloat!
     var screenHeight: CGFloat!
-    
     
     override func viewDidLoad()
     {
@@ -46,32 +44,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         let region = MKCoordinateRegionMakeWithDistance(coordinate, 4000, 4000)
         self.mapView.setRegion(region, animated: true)
         newCollectionBtn.enabled = false
-        getPhotos(page)
-        photoCollectionView.reloadData()
-    }
-    func getPhotos(pageno: Int)
-    {
-        flickrObj.getFlickrData(pageno, coordinate: coordinate) { (error) in
-            dispatch_async(dispatch_get_main_queue())
-            {
-            if error != ""
-            {
-                self.alertMsg("Error", msg: error!)
-                self.newCollectionBtn.enabled = false
-            }
-            else
-            {
-                FlickrPhotos.sharedInstance.getImages { (error) in
-                    if error != ""
-                    {
-                        self.alertMsg("Error: CoreData", msg: error)
-                    }
-                }
-                self.newCollectionBtn.enabled = true
-                self.showActivityInd(false)
-                self.photoCollectionView.reloadData()
-            }
-            }
+        //Clear cachedindex
+        Images.imagesInstance.cachedImagesIndex.removeAll()
+        //Get images of location from coreData
+        getPhotosCoredata()
+        if Images.imagesInstance.imageList.count == 0
+        {
+            newCollectionBtn.enabled = false
         }
     }
     
@@ -93,14 +72,15 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.whiteColor()
-        if FlickrPhotos.sharedInstance.List.count > 0
+        if Images.imagesInstance.imageList.count > 0
         {
-            let image = FlickrPhotos.sharedInstance.List[indexPath.row].valueForKey("imagesData") as! NSData
+           let image = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as! NSData
            cell.albumImage.image = UIImage(data: image)
         }
         else
         {
-            alertMsg("Photo Album", msg: "No Photos")
+            alertMsg("Photo Album", msg: "No More New Collection")
+            newCollectionBtn.enabled = false
         }
         return cell
     }
@@ -113,7 +93,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
          // show Remove Selected Pictures button
          removePicture.hidden = false
          newCollectionBtn.hidden = true
-         FlickrPhotos.sharedInstance.cachedImagesIndex.append(indexPath.row)
+         Images.imagesInstance.cachedImagesIndex.append(indexPath.row)
         }
     }
     func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath)
@@ -122,18 +102,17 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         if let cell = collectionView.cellForItemAtIndexPath(indexPath)
         {
             cell.alpha = 1.0
-            let cnt = FlickrPhotos.sharedInstance.cachedImagesIndex.count
+            let cnt = Images.imagesInstance.cachedImagesIndex.count - 1
             for index in 0...cnt
             {
-                if FlickrPhotos.sharedInstance.cachedImagesIndex.count < index
+                if index < Images.imagesInstance.cachedImagesIndex.count
                 {
-                    if FlickrPhotos.sharedInstance.cachedImagesIndex[index] == indexPath.row
+                    if Images.imagesInstance.cachedImagesIndex[index] == indexPath.row
                     {
-                        FlickrPhotos.sharedInstance.cachedImagesIndex.removeAtIndex(index)
+                        Images.imagesInstance.cachedImagesIndex.removeAtIndex(index)
                     }
                 }
             }
-            
         }
     }
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int
@@ -142,23 +121,23 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     }
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-       return FlickrPhotos.sharedInstance.List.count
+       return Images.imagesInstance.imageList.count
     }
     @IBAction func removePictureBtnPressed(sender: AnyObject)
     {
-     FlickrPhotos.sharedInstance.removeSelectedImages
+        Images.imagesInstance.removeSelectedImages(coordinate)
         { (error) in
             if error != ""
             {
-                self.alertMsg("Error: Deletion", msg: error)
+                self.alertMsg("Error: Image-Delete", msg: error)
             }
         }
-        FlickrPhotos.sharedInstance.getImages { (error) in
-            if error != ""
+     Images.imagesInstance.getImages(coordinate, completion: { (error) in
+         if error != ""
             {
                 self.alertMsg("Error: Photos", msg: error)
             }
-        }
+        })
         // Hide Remove Selected Pictures button
         removePicture.hidden = true
         newCollectionBtn.hidden = false
@@ -166,9 +145,43 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     }
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
     {
-        page = page + 1
-        getPhotos(page)
+        getNewPhotos(Pin.pinInstance.pageno)
+
     }
+    func getPhotosCoredata()
+    {
+        Images.imagesInstance.getImages(coordinate) { (error) in
+            if error != ""
+            {
+                self.alertMsg("Error: Images", msg: error)
+            }
+            else
+            {
+                self.showActivityInd(false)
+                self.newCollectionBtn.enabled = true
+                self.photoCollectionView.reloadData()
+            }
+        }
+    }
+
+    func getNewPhotos(pageno: Int)
+    {
+     flickrObj.updateImages(coordinate) { (error) in
+            if error != ""
+            {
+                self.alertMsg("Error", msg: error!)
+                self.newCollectionBtn.enabled = false
+            }
+            else
+            {
+                dispatch_async(dispatch_get_main_queue())
+                {
+                    self.getPhotosCoredata()
+                }
+            }
+     }
+    }
+
     func mapViewDidFinishLoadingMap(mapView: MKMapView)
     {
         showActivityInd(false)

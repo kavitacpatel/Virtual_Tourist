@@ -17,7 +17,50 @@ class FlickrApi: AnyObject
     var secret: String = ""
     let size = "z"
     
-    func getFlickrImage(completion:(err: String)-> Void)
+    func updateImages(coordinate:CLLocationCoordinate2D, completion:(error: String?) -> Void)
+    {
+        Images.imagesInstance.removeImages(coordinate, completion: { (error) in
+            if error != ""
+            {
+                completion(error: error)
+            }
+            })
+        //first set new pageno than get images
+        Pin.pinInstance.setNewPage(coordinate, completion: { (error) in
+            if error != ""
+            {
+                completion(error: error)
+            }
+        })
+        let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
+        let pageString = "&per_page=\(10)&page=\(Pin.pinInstance.pageno)&format=json&nojsoncallback=1"
+        let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
+        let session = NSURLSession.sharedSession()
+        let task = session.dataTaskWithURL(requestURL!, completionHandler: { data, response, error -> Void in
+            if data == nil && error == nil
+            {
+                completion(error: "Connection Problem")
+            }
+            else if error != nil
+            {
+                completion(error: "Network Problem")
+            }
+            else
+            {
+                        self.getImages(coordinate,data: data!, completion: { (error) in
+                                if error != ""
+                                {
+                                    completion(error: error)
+                                }
+                            })
+                    completion(error: "")
+            }
+        })
+        task.resume()
+    }
+    
+
+    func getFlickrImage(coordinate: CLLocationCoordinate2D,completion:(err: String)-> Void)
     {
             let photoURL = "https://farm\(self.farmId).staticflickr.com/\(self.serverId)/\(self.photoId)_\(self.secret)_\(self.size).jpg"
             if let url = NSURL(string: photoURL)
@@ -27,8 +70,9 @@ class FlickrApi: AnyObject
                 {
                     let img = UIImage(data: data)
                     //Save Photos to CoreData
-                    FlickrPhotos.sharedInstance.saveImages(img!, completion: { (error) in
-                        if error != ""
+                    
+                    Images.imagesInstance.saveImages(coordinate, img: img!, completion: { (error) in
+                       if error != ""
                         {
                             completion(err: error)
                         }
@@ -44,8 +88,9 @@ class FlickrApi: AnyObject
                 completion(err: "Error in URL")
             }
     }
-    func getFlickrData(page: Int,coordinate: CLLocationCoordinate2D, completion:(error: String?) -> Void)
+    func getFlickrData(page: Int,coordinate:CLLocationCoordinate2D,span: MKCoordinateSpan, completion:(error: String?) -> Void)
     {
+        
         let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
         let pageString = "&per_page=\(10)&page=\(page)&format=json&nojsoncallback=1"
         let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
@@ -61,47 +106,69 @@ class FlickrApi: AnyObject
             }
             else
             {
-              do
-              {
-                let result = try NSJSONSerialization.JSONObjectWithData(data!, options: []) as? NSDictionary
-                let dict = result!["photos"] as! NSDictionary
-                let photodict = dict["photo"] as? NSArray
-                if photodict != nil
-                {
-                    // remove Photos From CoreData
-                    FlickrPhotos.sharedInstance.removeImages({ (error) in
+               //save location
+               
+                Pin.pinInstance.saveLocation(coordinate, span: span, completion: { (error) in
+            
                         if error != ""
                         {
                             completion(error: error)
                         }
-                    })
-                    for photo in photodict!
-                    {
-                        self.farmId = photo.valueForKey("farm") as! NSNumber
-                        self.serverId = photo.valueForKey("server") as! String
-                        self.photoId = photo.valueForKey("id") as! String
-                        self.secret = photo.valueForKey("secret") as! String
-                        //get Image
-                        self.getFlickrImage({ (err) in
-                            if err != ""
+                        else
+                        {
+                            //once location is saved, get images of that location
+                            dispatch_async(dispatch_get_main_queue())
                             {
-                                completion(error: "Can not get Images")
+                                self.getImages(coordinate,data: data!, completion: { (error) in
+                                    if error != ""
+                                    {
+                                        completion(error: error)
+                                    }
+                                })
                             }
-                        })
                     }
-                    completion(error: "")
-                }
-                else
-                {
-                   completion(error: "Data is nil")
-                }
-            }
-            catch 
-            {
-                completion(error: "Json Serialization Problem")
-            }
+                })
+
             }
         })
         task.resume()
    }
+    func getImages(coordinate:CLLocationCoordinate2D,data: NSData,completion:(error: String?) -> Void)
+   {
+    do
+    {
+        let result = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? NSDictionary
+        let dict = result!["photos"] as! NSDictionary
+        let photodict = dict["photo"] as? NSArray
+        if photodict != nil
+        {
+            for photo in photodict!
+            {
+                self.farmId = photo.valueForKey("farm") as! NSNumber
+                self.serverId = photo.valueForKey("server") as! String
+                self.photoId = photo.valueForKey("id") as! String
+                self.secret = photo.valueForKey("secret") as! String
+                
+                //Get Flickr Images
+                self.getFlickrImage(coordinate, completion: { (err) in
+                    if err != ""
+                    {
+                        completion(error: "Can not get Images")
+                    }
+                })
+            }
+            completion(error: "")
+        }
+        else
+        {
+            completion(error: "Data is nil")
+        }
+        
+    }
+    catch
+    {
+        completion(error: "Json serialize error")
+    }
+
+    }
 }
