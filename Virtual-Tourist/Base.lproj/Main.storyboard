@@ -18,6 +18,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="11S-sd-Voo">
+                                <rect key="frame" x="0.0" y="64" width="600" height="536"/>
+                                <gestureRecognizers/>
+                                <connections>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="9hk-TE-AGP"/>
+                                    <outletCollection property="gestureRecognizers" destination="RL7-7Q-dmJ" appends="YES" id="zj6-HC-XT1"/>
+                                </connections>
+                            </mapView>
                             <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tap Pins to Delete" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eZJ-d4-hqS">
                                 <rect key="frame" x="0.0" y="559" width="600" height="41"/>
                                 <color key="backgroundColor" red="0.9671815037727356" green="0.27705135941505432" blue="0.021931847557425499" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -28,14 +36,6 @@
                                 <color key="textColor" red="0.98043292760848999" green="0.97220855951309204" blue="0.99274474382400513" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="11S-sd-Voo">
-                                <rect key="frame" x="0.0" y="64" width="600" height="536"/>
-                                <gestureRecognizers/>
-                                <connections>
-                                    <outlet property="delegate" destination="BYZ-38-t0r" id="9hk-TE-AGP"/>
-                                    <outletCollection property="gestureRecognizers" destination="RL7-7Q-dmJ" appends="YES" id="zj6-HC-XT1"/>
-                                </connections>
-                            </mapView>
                             <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="Vlu-Pl-sR2">
                                 <rect key="frame" x="282" y="281" width="37" height="37"/>
                                 <color key="color" red="0.9950670599937439" green="0.25180113315582275" blue="0.0070423469878733158" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
