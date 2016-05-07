@@ -14,7 +14,7 @@ import CoreData
 
 extension Images {
 
-    @NSManaged var imagesData: NSData?
+    @NSManaged var imagesData: NSString?
     @NSManaged var pin: Pin?
 
 }

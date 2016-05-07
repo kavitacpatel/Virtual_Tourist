@@ -105,8 +105,9 @@ class Pin: NSManagedObject {
                     let newCoordination = CLLocationCoordinate2D(latitude: pin.valueForKey("latitude") as! CLLocationDegrees, longitude: pin.valueForKey("longitude") as! CLLocationDegrees)
                     if newCoordination.latitude == loc.latitude && newCoordination.longitude == loc.longitude
                     {
-                        context.deleteObject(pin)
+                        
                         do{
+                            context.deleteObject(pin)
                             try context.save()
                             print("location is deleted")
                             completion(error: "")

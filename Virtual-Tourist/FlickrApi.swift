@@ -70,13 +70,12 @@ class FlickrApi: AnyObject
                 {
                     let img = UIImage(data: data)
                     //Save Photos to CoreData
-                    
-                    Images.imagesInstance.saveImages(coordinate, img: img!, completion: { (error) in
-                       if error != ""
-                        {
-                            completion(err: error)
-                        }
-                    })
+                    Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
+                           if error != ""
+                            {
+                                completion(err: error)
+                            }
+                        })
                 }
                 else
                 {
@@ -90,7 +89,6 @@ class FlickrApi: AnyObject
     }
     func getFlickrData(page: Int,coordinate:CLLocationCoordinate2D,span: MKCoordinateSpan, completion:(error: String?) -> Void)
     {
-        
         let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
         let pageString = "&per_page=\(10)&page=\(page)&format=json&nojsoncallback=1"
         let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
@@ -107,7 +105,8 @@ class FlickrApi: AnyObject
             else
             {
                //save location
-               
+                dispatch_async(dispatch_get_main_queue())
+                {
                 Pin.pinInstance.saveLocation(coordinate, span: span, completion: { (error) in
             
                         if error != ""
@@ -117,8 +116,7 @@ class FlickrApi: AnyObject
                         else
                         {
                             //once location is saved, get images of that location
-                            dispatch_async(dispatch_get_main_queue())
-                            {
+                            
                                 self.getImages(coordinate,data: data!, completion: { (error) in
                                     if error != ""
                                     {
@@ -126,8 +124,8 @@ class FlickrApi: AnyObject
                                     }
                                 })
                             }
-                    }
-                })
+                    })
+                }
 
             }
         })

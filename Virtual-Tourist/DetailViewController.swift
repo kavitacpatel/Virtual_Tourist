@@ -74,8 +74,9 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         cell.backgroundColor = UIColor.whiteColor()
         if Images.imagesInstance.imageList.count > 0
         {
-           let image = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as! NSData
-           cell.albumImage.image = UIImage(data: image)
+           let imagepath = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as! String
+           let imageFromPath = UIImage(contentsOfFile: imagepath)
+           cell.albumImage.image = imageFromPath
         }
         else
         {

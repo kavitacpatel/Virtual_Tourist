@@ -90,6 +90,7 @@ class MapController: UIViewController, MKMapViewDelegate
             {
                 self.alertMsg("Delete Location", msg: "Location is Deleted")
             }
+            
         })
         }
         else
@@ -119,7 +120,7 @@ class MapController: UIViewController, MKMapViewDelegate
     
     @IBAction func addPinWithGesture(sender: UILongPressGestureRecognizer)
     {
-      if sender.state == UIGestureRecognizerState.Ended
+      if gestureRecognize.state == .Began
       {
          let touchPoint = gestureRecognize.locationInView(mapView)
          let points = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
