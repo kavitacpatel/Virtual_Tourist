@@ -33,44 +33,49 @@ class Images: NSManagedObject
         request.predicate = NSPredicate(format: "latitude = %@ AND longitude = %@", lati, long)
         do{
             let results = try context.executeFetchRequest(request)
-            if results.count > 0 {
+            if results.count > 0
+            {
                 for result in results
                 {
                     let pin = result as! Pin
                     let imagesEntity = NSEntityDescription.insertNewObjectForEntityForName("Images", inManagedObjectContext: context) as! Images
-                    //let imgData = NSData(data: UIImageJPEGRepresentation(img, 1.0)!)
-                    if let data = UIImageJPEGRepresentation(img, 0.8) {
-                        let filename = getDocumentsDirectory().stringByAppendingPathComponent("img\(imgName).png")
-                        data.writeToFile(filename, atomically: true)
-                        imagesEntity.imagesData = filename 
-                        pin.addImageObject(imagesEntity)
-                        imagesEntity.pin = pin
-                    }
-                    
-                    do{
-                        try context.save()
-                        completion(error: "")
-                    }catch
-                    {
-                        completion(error:  "Can not Save Images")
-                    }
+                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                    let fileURL = documentsURL.URLByAppendingPathComponent("img\(imgName).png")
+                    let pngImageData = UIImagePNGRepresentation(img)
+                    let result = pngImageData!.writeToFile(fileURL.path!, atomically: true)
+                       if result
+                        {
+                            imagesEntity.setValue("img\(imgName).png", forKey: "imagesData")
+                            pin.addImageObject(imagesEntity)
+                            imagesEntity.pin = pin
+                            do{
+                               
+                                try context.save()
+                                completion(error: "")
+                                }
+                            catch
+                            {
+                                completion(error:  "Can not Save Images")
+                            }
+                        }
+                        else
+                        {
+                            completion(error: "Can not save images to document directory")
+                        }
                 }
+                
             }
         }
+        
         catch
         {
             completion(error:  "Can not Save Images")
         }
     }
-    func getDocumentsDirectory() -> NSString {
-        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
-        let documentsDirectory = paths[0]
-        return documentsDirectory
-    }
+    
     // Get images of selected location
     func getImages(location: CLLocationCoordinate2D, completion:(error: String)-> Void)
     {
-        
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
         let lati = location.latitude as NSNumber
@@ -93,14 +98,15 @@ class Images: NSManagedObject
         let request = NSFetchRequest(entityName: "Images")
         request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
         //get Images of current location
-        do{
-            imageList = try context.executeFetchRequest(request) as! [NSManagedObject]
-            completion(error: "")
-        }
-        catch
-        {
-            completion(error: "Can not Load Photos")
-        }
+            do{
+               self.imageList = try context.executeFetchRequest(request) as! [NSManagedObject]
+                completion(error: "")
+                
+            }
+            catch
+            {
+                    completion(error: "Can not Fetch Images from CoreData")
+            }
     }
     func removeImages(location: CLLocationCoordinate2D,completion:(error: String)-> Void)
     {
@@ -116,26 +122,29 @@ class Images: NSManagedObject
             imageList = try context.executeFetchRequest(request) as! [NSManagedObject]
             for img in imageList
             {
-                context.deleteObject(img)
-                do
-                {
-                     try context.save()
-                }
-                catch
-                {
-                    completion(error: "Can not remove from Core data")
-                }
+                
                 do{
                     //remove from directory
-                    try fileManager.removeItemAtPath(img.valueForKey("imagesData")as! String)
-                    
+                    let imageName = img.valueForKey("imagesData")as! String
+                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                    let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+                    try fileManager.removeItemAtPath(fileURL.path!)
                 }
                 catch
                 {
                     completion(error: "Can not remove from document directory")
                 }
-                
+                //remove path from coredata
+                context.deleteObject(img)
+                do
+                {
+                    try context.save()
                 }
+                catch
+                {
+                    completion(error: "Can not remove from Core data")
+                }
+            }
             completion(error: "")
         }
     catch
@@ -167,7 +176,10 @@ class Images: NSManagedObject
                 {
                     do{
                         //remove from directory
-                        try fileManager.removeItemAtPath(imageList[cachedImagesIndex[i]].valueForKey("imagesData")as! String)
+                        let imageName = imageList[cachedImagesIndex[i]].valueForKey("imagesData")as! String
+                        let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                        let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+                        try fileManager.removeItemAtPath(fileURL.path!)
                     }
                     catch
                     {

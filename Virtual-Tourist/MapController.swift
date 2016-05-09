@@ -29,13 +29,17 @@ class MapController: UIViewController, MKMapViewDelegate
     override func viewDidAppear(animated: Bool)
     {
         editBtn.title = "Edit"
-        
+        if mapView.annotations.count != 0
+        {
+            let ex = mapView.annotations
+            mapView.removeAnnotations(ex)
+        }
         getLocation()
     }
     func getLocation()
     {
         var span = MKCoordinateSpan()
-        Pin.pinInstance.getLocation { (locations, error) in
+            Pin.pinInstance.getLocation { (locations, error) in
             if error != ""
             {
                 self.alertMsg("Location Error", msg: error)
@@ -49,16 +53,15 @@ class MapController: UIViewController, MKMapViewDelegate
                     annotation.coordinate.longitude = location.valueForKey("longitude") as! CLLocationDegrees
                     self.pointAnnotation.coordinate.latitude = annotation.coordinate.latitude
                     self.pointAnnotation.coordinate.longitude = annotation.coordinate.longitude
-                    span.latitudeDelta = location.valueForKey("latitudeDelta") as! CLLocationDegrees
-                    span.longitudeDelta = location.valueForKey("longitudeDelta") as! CLLocationDegrees
+                    span = MKCoordinateSpanMake(location.valueForKey("latitudeDelta") as! CLLocationDegrees, location.valueForKey("longitudeDelta") as! CLLocationDegrees)
                     self.mapView.addAnnotation(annotation)
                 }
                 if locations.count > 0
                 {
                 // the map should return to the same state when it is turned on again
-                  self.mapView.region.span = span
-                  let region: MKCoordinateRegion = MKCoordinateRegionMake(self.pointAnnotation.coordinate, span)
-                  self.mapView.region = region
+                  
+                 // let region: MKCoordinateRegion = MKCoordinateRegionMake(self.pointAnnotation.coordinate, span)
+                //  self.mapView.region = region
                 }
             }
         }
@@ -80,7 +83,7 @@ class MapController: UIViewController, MKMapViewDelegate
         if editState
         {
             //Delete selected pin
-            self.mapView.removeAnnotation(view.annotation!)
+           self.mapView.removeAnnotation(view.annotation!)
           Pin.pinInstance.deleteLocation(newcoordinate, completion: { (error) in
             if error != ""
             {
@@ -96,7 +99,8 @@ class MapController: UIViewController, MKMapViewDelegate
         else
         {
             pointAnnotation.coordinate = newcoordinate
-            performSegueWithIdentifier("detailSegue", sender: self)
+            self.performSegueWithIdentifier("detailSegue", sender: self)
+            
         }
     }
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)
@@ -133,11 +137,15 @@ class MapController: UIViewController, MKMapViewDelegate
          // get data of dropped pin location
          let flickrObj = FlickrApi()
         flickrObj.getFlickrData(1, coordinate: coordinate,span: mapSpan, completion: { (error) in
-            if error != ""
+            dispatch_async(dispatch_get_main_queue())
             {
-                self.alertMsg("Error: SaveImages", msg: error!)
+                if error != ""
+                {
+                    self.alertMsg("Error: SaveImages", msg: error!)
+                }
             }
         })
+        
         }
     }
     func alertMsg(title: String, msg: String)

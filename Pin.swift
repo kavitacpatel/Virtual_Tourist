@@ -40,6 +40,7 @@ class Pin: NSManagedObject {
             {
                 page_no.setValue(Pin.pinInstance.pageno, forKey: "page")
             }
+            completion(error: "")
         }
         catch
         {
@@ -62,14 +63,21 @@ class Pin: NSManagedObject {
         location.setValue(span.longitudeDelta, forKey: "longitudeDelta")
         //initially set page to no 1 to get images
         location.setValue(1, forKey: "page")
-        do{
-            try context.save()
-            print("location is saved")
-            completion(error: "")
-        }catch
-        {
-            completion(error: "Can not Save Location")
-        }
+            do{
+                try context.save()
+                print("location is saved")
+                dispatch_async(dispatch_get_main_queue())
+                {
+                    completion(error: "")
+                }
+            }
+            catch
+            {
+                dispatch_async(dispatch_get_main_queue())
+                {
+                completion(error: "Can not Save Location")
+                }
+            }
     }
     //CoreData: when Map Controller loads, get saved location from coredata
     func getLocation(completion: (locations: [NSManagedObject] ,error: String)-> Void)
@@ -92,6 +100,10 @@ class Pin: NSManagedObject {
     //CoreData: Delete Pin and Related Images
     func deleteLocation(loc: CLLocationCoordinate2D, completion: (error: String)-> Void)
     {
+        //remove images from document directory
+        Images.imagesInstance.removeImages(loc) { (error) in
+            completion(error: error)
+        }
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
         let request = NSFetchRequest(entityName: "Pin")
@@ -130,5 +142,5 @@ class Pin: NSManagedObject {
             completion(error: "Can Not Fetch Location")
         }
     }
-    
+   
 }

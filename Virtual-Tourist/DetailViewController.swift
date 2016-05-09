@@ -47,11 +47,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         //Clear cachedindex
         Images.imagesInstance.cachedImagesIndex.removeAll()
         //Get images of location from coreData
-        getPhotosCoredata()
-        if Images.imagesInstance.imageList.count == 0
-        {
-            newCollectionBtn.enabled = false
-        }
+        self.getPhotosCoredata()
+        
     }
     
     //To reduce cell gaps
@@ -70,22 +67,25 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
+        
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.whiteColor()
         if Images.imagesInstance.imageList.count > 0
         {
-           let imagepath = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as! String
-           let imageFromPath = UIImage(contentsOfFile: imagepath)
-           cell.albumImage.image = imageFromPath
+            let imageName = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as! String
+            let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+            let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+            cell.albumImage.image = UIImage(contentsOfFile: fileURL.path!)
         }
         else
         {
-            alertMsg("Photo Album", msg: "No More New Collection")
-            newCollectionBtn.enabled = false
+            self.alertMsg("Photo Album", msg: "No More New Collection")
+            self.newCollectionBtn.enabled = false
         }
         return cell
+        
     }
-
+    
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
     {
         if let cell = collectionView.cellForItemAtIndexPath(indexPath)
@@ -146,28 +146,37 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     }
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
     {
+        showActivityInd(true)
+        newCollectionBtn.enabled = false
         getNewPhotos(Pin.pinInstance.pageno)
-
+        
     }
     func getPhotosCoredata()
     {
-        Images.imagesInstance.getImages(coordinate) { (error) in
-            if error != ""
+        Images.imagesInstance.getImages(self.coordinate) { (error) in
+           if error != ""
             {
                 self.alertMsg("Error: Images", msg: error)
             }
             else
             {
-                self.showActivityInd(false)
-                self.newCollectionBtn.enabled = true
-                self.photoCollectionView.reloadData()
+                if Images.imagesInstance.imageList.count == 0
+                {
+                    self.newCollectionBtn.enabled = false
+                }
+                else
+                {
+                    self.newCollectionBtn.enabled = true
+                }
+                    self.showActivityInd(false)
+                    self.photoCollectionView.reloadData()
             }
         }
     }
 
     func getNewPhotos(pageno: Int)
     {
-     flickrObj.updateImages(coordinate) { (error) in
+            self.flickrObj.updateImages(self.coordinate) { (error) in
             if error != ""
             {
                 self.alertMsg("Error", msg: error!)
@@ -175,12 +184,9 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
             }
             else
             {
-                dispatch_async(dispatch_get_main_queue())
-                {
-                    self.getPhotosCoredata()
-                }
+                self.getPhotosCoredata()
             }
-     }
+        }
     }
 
     func mapViewDidFinishLoadingMap(mapView: MKMapView)
