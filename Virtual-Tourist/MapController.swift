@@ -38,8 +38,9 @@ class MapController: UIViewController, MKMapViewDelegate
     }
     func getLocation()
     {
-        var span = MKCoordinateSpan()
+        
             Pin.pinInstance.getLocation { (locations, error) in
+                var span = MKCoordinateSpan()
             if error != ""
             {
                 self.alertMsg("Location Error", msg: error)
@@ -60,8 +61,8 @@ class MapController: UIViewController, MKMapViewDelegate
                 {
                 // the map should return to the same state when it is turned on again
                   
-                 // let region: MKCoordinateRegion = MKCoordinateRegionMake(self.pointAnnotation.coordinate, span)
-                //  self.mapView.region = region
+                  let region: MKCoordinateRegion = MKCoordinateRegionMake(self.pointAnnotation.coordinate, span)
+                  self.mapView.region = region
                 }
             }
         }
@@ -89,11 +90,6 @@ class MapController: UIViewController, MKMapViewDelegate
             {
                 self.alertMsg("Delete Location", msg: error)
             }
-            else
-            {
-                self.alertMsg("Delete Location", msg: "Location is Deleted")
-            }
-            
         })
         }
         else
@@ -136,12 +132,18 @@ class MapController: UIViewController, MKMapViewDelegate
          mapSpan = mapView.region.span
          // get data of dropped pin location
          let flickrObj = FlickrApi()
+        showActivityInd(true)
         flickrObj.getFlickrData(1, coordinate: coordinate,span: mapSpan, completion: { (error) in
             dispatch_async(dispatch_get_main_queue())
             {
                 if error != ""
                 {
                     self.alertMsg("Error: SaveImages", msg: error!)
+                }
+                else
+                {
+                    print("images saved")
+                    self.showActivityInd(false)
                 }
             }
         })

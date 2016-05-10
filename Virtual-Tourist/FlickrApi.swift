@@ -19,12 +19,9 @@ class FlickrApi: AnyObject
     
     func updateImages(coordinate:CLLocationCoordinate2D, completion:(error: String?) -> Void)
     {
-        Images.imagesInstance.removeImages(coordinate, completion: { (error) in
-            if error != ""
-            {
-                completion(error: error)
-            }
-            })
+        Images.imagesInstance.removeImages(coordinate) { (error) in
+            completion(error: error)
+        }
         //first set new pageno than get images
         Pin.pinInstance.setNewPage(coordinate, completion: { (error) in
             if error != ""
@@ -32,30 +29,31 @@ class FlickrApi: AnyObject
                 completion(error: error)
             }
         })
-        let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
-        let pageString = "&per_page=\(10)&page=\(Pin.pinInstance.pageno)&format=json&nojsoncallback=1"
-        let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithURL(requestURL!, completionHandler: { data, response, error -> Void in
-          if data == nil && error == nil
-            {
-                completion(error: "Connection Problem")
-            }
-            else if error != nil
-            {
-                completion(error: "Network Problem")
-            }
-            else
-            {
-                                      self.getImages(coordinate,data: data!, completion: { (error) in
+                let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
+                let pageString = "&per_page=\(10)&page=\(Pin.pinInstance.pageno)&format=json&nojsoncallback=1"
+                let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
+                let session = NSURLSession.sharedSession()
+                let task = session.dataTaskWithURL(requestURL!, completionHandler: { data, response, error -> Void in
+                    if data == nil && error == nil
+                    {
+                        completion(error: "Connection Problem")
+                    }
+                    else if error != nil
+                    {
+                        completion(error: "Network Problem")
+                    }
+                    else
+                    {
+                                self.getImages(coordinate,data: data!, completion: { (error) in
                                     completion(error: error)
+                            
                                 })
-                
-            }
-        })
-        task.resume()
+                                completion(error: "")
+                    }
+                    })
+            task.resume()
+            
     }
-    
 
     func getFlickrImage(coordinate: CLLocationCoordinate2D,imgName: String,completion:(err: String)-> Void)
     {
@@ -67,9 +65,12 @@ class FlickrApi: AnyObject
                 {
                     let img = UIImage(data: data)
                     //Save Photos to CoreData
-                    Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
-                        completion(err: error)
+                    dispatch_async(dispatch_get_main_queue())
+                    {
+                            Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
+                                completion(err: error)
                     })
+                    }
                  }
                 else
                 {
@@ -105,7 +106,7 @@ class FlickrApi: AnyObject
                         completion(error: error)
                     }
                 })
-                    //once location is saved, get images of that location
+                  //once location is saved, get images of that location
                         self.getImages(coordinate,data: data!, completion:
                             { (error) in
                                     completion(error: error)
@@ -133,10 +134,13 @@ class FlickrApi: AnyObject
                 //Get Flickr Images
                 
                  self.getFlickrImage(coordinate,imgName:self.photoId , completion: { (err) in
+                    dispatch_async(dispatch_get_main_queue())
+                    {
                         if err != ""
                         {
                             completion(error: "Can not get Images")
                         }
+                    }
                     })
             }
             completion(error: "")
