@@ -89,6 +89,7 @@ class Images: NSManagedObject
             for pageno in pages
             {
                 Pin.pinInstance.pageno = pageno.valueForKey("page") as! Int
+                return
             }
         }
         catch
@@ -99,13 +100,12 @@ class Images: NSManagedObject
         request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
         //get Images of current location
             do{
-               self.imageList = try context.executeFetchRequest(request) as! [NSManagedObject]
+                self.imageList = try context.executeFetchRequest(request) as! [NSManagedObject]
                 completion(error: "")
-                
             }
             catch
             {
-                    completion(error: "Can not Fetch Images from CoreData")
+                completion(error: "Can not Fetch Images from CoreData")
             }
     }
     func removeImages(location: CLLocationCoordinate2D,completion:(error: String)-> Void)

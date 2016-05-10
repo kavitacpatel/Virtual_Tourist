@@ -47,12 +47,10 @@ class FlickrApi: AnyObject
             }
             else
             {
-                dispatch_async(dispatch_get_main_queue())
-                {
-                        self.getImages(coordinate,data: data!, completion: { (error) in
+                                      self.getImages(coordinate,data: data!, completion: { (error) in
                                     completion(error: error)
                                 })
-                }
+                
             }
         })
         task.resume()
@@ -69,10 +67,9 @@ class FlickrApi: AnyObject
                 {
                     let img = UIImage(data: data)
                     //Save Photos to CoreData
-                            Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
-                                    completion(err: error)
+                    Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
+                        completion(err: error)
                     })
-                    
                  }
                 else
                 {
@@ -102,14 +99,13 @@ class FlickrApi: AnyObject
             else
             {
                //save location
-               
                 Pin.pinInstance.saveLocation(coordinate, span: span, completion: { (error) in
                     if error != ""
                     {
                         completion(error: error)
                     }
                 })
-                        //once location is saved, get images of that location
+                    //once location is saved, get images of that location
                         self.getImages(coordinate,data: data!, completion:
                             { (error) in
                                     completion(error: error)
@@ -135,13 +131,13 @@ class FlickrApi: AnyObject
                 self.secret = photo.valueForKey("secret") as! String
                 
                 //Get Flickr Images
+                
                  self.getFlickrImage(coordinate,imgName:self.photoId , completion: { (err) in
                         if err != ""
                         {
                             completion(error: "Can not get Images")
                         }
                     })
-    
             }
             completion(error: "")
         }

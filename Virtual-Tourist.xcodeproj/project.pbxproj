@@ -19,10 +19,6 @@
 		6BE06AD61CD4004500508AEC /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06AD51CD4004500508AEC /* DetailViewController.swift */; };
 		6BE06AD81CD6535100508AEC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06AD71CD6535100508AEC /* Constants.swift */; };
 		6BE06ADB1CD6564800508AEC /* FlickrApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06ADA1CD6564800508AEC /* FlickrApi.swift */; };
-		6BE06BEE1CDBBE4600508AEC /* Pin+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06BEA1CDBBE4600508AEC /* Pin+CoreDataProperties.swift */; };
-		6BE06BF01CDBBE4600508AEC /* Images+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06BEC1CDBBE4600508AEC /* Images+CoreDataProperties.swift */; };
-		6BE06BF41CDCD63B00508AEC /* Images.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06BF21CDCD63B00508AEC /* Images.swift */; };
-		6BE06BF51CDCD63B00508AEC /* Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE06BF31CDCD63B00508AEC /* Pin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,10 +57,6 @@
 		6BE06AD51CD4004500508AEC /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
 		6BE06AD71CD6535100508AEC /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		6BE06ADA1CD6564800508AEC /* FlickrApi.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlickrApi.swift; sourceTree = "<group>"; };
-		6BE06BEA1CDBBE4600508AEC /* Pin+CoreDataProperties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Pin+CoreDataProperties.swift"; path = "../Pin+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		6BE06BEC1CDBBE4600508AEC /* Images+CoreDataProperties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Images+CoreDataProperties.swift"; path = "../Images+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		6BE06BF21CDCD63B00508AEC /* Images.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Images.swift; path = ../Images.swift; sourceTree = "<group>"; };
-		6BE06BF31CDCD63B00508AEC /* Pin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Pin.swift; path = ../Pin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,10 +176,6 @@
 		6BE06BF61CDCFC1B00508AEC /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
-				6BE06BF21CDCD63B00508AEC /* Images.swift */,
-				6BE06BF31CDCD63B00508AEC /* Pin.swift */,
-				6BE06BEA1CDBBE4600508AEC /* Pin+CoreDataProperties.swift */,
-				6BE06BEC1CDBBE4600508AEC /* Images+CoreDataProperties.swift */,
 			);
 			name = CoreData;
 			sourceTree = "<group>";
@@ -327,12 +315,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BE06A9C1CD3CAF200508AEC /* MapController.swift in Sources */,
-				6BE06BF41CDCD63B00508AEC /* Images.swift in Sources */,
 				6BE06AA21CD3CAF200508AEC /* Virtual_Tourist.xcdatamodeld in Sources */,
 				6BE06ACB1CD3F89D00508AEC /* imageCellCollectionViewCell.swift in Sources */,
-				6BE06BEE1CDBBE4600508AEC /* Pin+CoreDataProperties.swift in Sources */,
-				6BE06BF51CDCD63B00508AEC /* Pin.swift in Sources */,
-				6BE06BF01CDBBE4600508AEC /* Images+CoreDataProperties.swift in Sources */,
 				6BE06AD61CD4004500508AEC /* DetailViewController.swift in Sources */,
 				6BE06AD81CD6535100508AEC /* Constants.swift in Sources */,
 				6BE06ADB1CD6564800508AEC /* FlickrApi.swift in Sources */,
