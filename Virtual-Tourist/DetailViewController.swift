@@ -33,13 +33,14 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         photoCollectionView.dataSource = self
         photoCollectionView.delegate = self
         photoCollectionView.allowsMultipleSelection = true
+        photoCollectionView.alwaysBounceVertical = true
         showActivityInd(true)
         screenSize = UIScreen.mainScreen().bounds
         screenWidth = screenSize.width
         screenHeight = screenSize.height
         refreshControl.addTarget(self, action: #selector(DetailViewController.refreshController), forControlEvents: .ValueChanged)
         photoCollectionView.addSubview(refreshControl)
-       photoCollectionView.sendSubviewToBack(refreshControl)
+        photoCollectionView.sendSubviewToBack(refreshControl)
         cache = NSCache()
     }
     override func viewWillAppear(animated: Bool)
@@ -75,13 +76,12 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     {
                         self.newCollectionBtn.enabled = true
                     }
-                self.showActivityInd(false)
-                self.photoCollectionView.reloadData()
-                self.refreshControl.endRefreshing()
-                }
+                    self.showActivityInd(false)
+                        self.photoCollectionView.reloadData()
+                        self.refreshControl.endRefreshing()
+                    }
             }
-            
-        }
+           }
 
     }
     //To reduce cell gaps
@@ -103,10 +103,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
         cell.albumImage?.image = UIImage(named: "placeholder")
-        if (self.cache?.objectForKey(indexPath.row) != nil){
+        
+        if (self.cache?.objectForKey(indexPath.row) != nil)
+        {
             cell.albumImage?.image = self.cache?.objectForKey(indexPath.row) as? UIImage
         }
         else{
+           
            if Images.imagesInstance.imageList.count != 0
            {
                 if let imageName = Images.imagesInstance.imageList[indexPath.row].valueForKey("imagesData") as? String
@@ -115,8 +118,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
                     let img = UIImage(contentsOfFile: fileURL.path!)
                     cell.albumImage.image = img
-                }
             }
+        }
         }
         return cell
     }
@@ -177,18 +180,27 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         showActivityInd(true)
         newCollectionBtn.enabled = false
-        getNewPhotos()
-        
-    }
-    
-    func getNewPhotos()
-    {
         cache?.removeAllObjects()
-        self.flickrObj.updateImages(self.coordinate) { (error) in
-           dispatch_async(dispatch_get_main_queue(), self.refreshController)
-        }
+        //remove old images
+        Images.imagesInstance.removeImages(coordinate.latitude, long: coordinate.longitude)
+        //first set new pageno than get images
+        Pin.pinInstance.setNewPage(coordinate)
+        self.flickrObj.getFlickrData(Pin.pinInstance.pageno, coordinate: self.coordinate,span: nil, completion: { (error) in
+            dispatch_async(dispatch_get_main_queue())
+            {
+                if error != ""
+                {
+                    self.alertMsg("Error: SaveImages", msg: error!)
+                }
+                else
+                {
+                    print("images saved")
+                    dispatch_async(dispatch_get_main_queue(), self.refreshController)
+                     self.showActivityInd(false)
+                }
+             }
+            })
     }
-
     func mapViewDidFinishLoadingMap(mapView: MKMapView)
     {
         showActivityInd(false)

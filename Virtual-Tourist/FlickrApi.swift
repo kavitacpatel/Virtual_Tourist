@@ -17,42 +17,7 @@ class FlickrApi: AnyObject
     var secret: String = ""
     let size = "z"
     
-    func updateImages(coordinate:CLLocationCoordinate2D, completion:(error: String?) -> Void)
-    {
-        Images.imagesInstance.removeImages(coordinate.latitude, long: coordinate.longitude)
-        //first set new pageno than get images
-        Pin.pinInstance.setNewPage(coordinate, completion: { (error) in
-            if error != ""
-            {
-                completion(error: error)
-            }
-        })
-                let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
-                let pageString = "&per_page=\(10)&page=\(Pin.pinInstance.pageno)&format=json&nojsoncallback=1"
-                let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
-                let session = NSURLSession.sharedSession()
-                let task = session.dataTaskWithURL(requestURL!, completionHandler: { data, response, error -> Void in
-                    if data == nil && error == nil
-                    {
-                        completion(error: "Connection Problem")
-                    }
-                    else if error != nil
-                    {
-                        completion(error: "Network Problem")
-                    }
-                    else
-                    {
-                                self.getImages(coordinate,data: data!, completion: { (error) in
-                                    completion(error: error)
-                            
-                                })
-                                completion(error: "")
-                    }
-                    })
-            task.resume()
-            
-    }
-
+    
     func getFlickrImage(coordinate: CLLocationCoordinate2D,imgName: String,completion:(err: String)-> Void)
     {
             let photoURL = "https://farm\(self.farmId).staticflickr.com/\(self.serverId)/\(self.photoId)_\(self.secret)_\(self.size).jpg"
@@ -78,16 +43,17 @@ class FlickrApi: AnyObject
                     }
                 }
             }
-        else
+            else
             {
                 dispatch_async(dispatch_get_main_queue())
                 {
-                    completion(err: "Error in URL")
+                    completion(err:"Error in URL")
                 }
             }
     }
-    func getFlickrData(page: Int,coordinate:CLLocationCoordinate2D,span: MKCoordinateSpan, completion:(error: String?) -> Void)
+    func getFlickrData(page: Int,coordinate:CLLocationCoordinate2D,span: MKCoordinateSpan?, completion:(error: String?) -> Void)
     {
+        print(page)
         let searchString = "&lat=\(coordinate.latitude)&lon=\(coordinate.longitude)"
         let pageString = "&per_page=\(10)&page=\(page)&format=json&nojsoncallback=1"
         let requestURL = NSURL(string: BaseUrl + method + APIKEY + searchString + pageString)
@@ -103,14 +69,14 @@ class FlickrApi: AnyObject
             }
             else
             {
-               //save location
+               //save location- it will check if location already saved than it wont save it again
                 Pin.pinInstance.saveLocation(coordinate, span: span, completion: { (error) in
                     if error != ""
                     {
                         completion(error: error)
                     }
                 })
-                  //once location is saved, get images of that location
+                  //once location is saved, get images of that location 
                         self.getImages(coordinate,data: data!, completion:
                             { (error) in
                                     completion(error: error)
@@ -119,7 +85,7 @@ class FlickrApi: AnyObject
         })
         task.resume()
    }
-    func getImages(coordinate:CLLocationCoordinate2D,data: NSData,completion:(error: String?) -> Void)
+  func getImages(coordinate:CLLocationCoordinate2D,data: NSData,completion:(error: String?) -> Void)
    {
     do
     {

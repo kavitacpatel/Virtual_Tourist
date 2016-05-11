@@ -23,10 +23,9 @@ class Pin: NSManagedObject {
         
     }
    //set New Page no.
-    func setNewPage(location: CLLocationCoordinate2D, completion:(error: String)-> Void)
+    func setNewPage(location: CLLocationCoordinate2D)
     {
         pageno = pageno + 1
-        print(pageno)
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
         let lati = location.latitude as NSNumber
@@ -40,47 +39,59 @@ class Pin: NSManagedObject {
             for page_no in pages
             {
                 page_no.setValue(pageno, forKey: "page")
-                completion(error: "")
             }
-            
         }
         catch
         {
-            completion(error: "Can not Load Photos")
+            print( "Can not set new page")
         }
-        
     }
 
-    func saveLocation(loc: CLLocationCoordinate2D, span: MKCoordinateSpan, completion: (error: String)-> Void)
+    func saveLocation(loc: CLLocationCoordinate2D, span: MKCoordinateSpan?, completion: (error: String)-> Void)
     {
         let lati = loc.latitude as NSNumber
         let long = loc.longitude as NSNumber
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
         let entity = NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)
-        let location = NSManagedObject(entity: entity!, insertIntoManagedObjectContext: context)
-        location.setValue(lati , forKey: "latitude")
-        location.setValue(long, forKey: "longitude")
-        location.setValue(span.latitudeDelta, forKey: "latitudeDelta")
-        location.setValue(span.longitudeDelta, forKey: "longitudeDelta")
-        //initially set page to no 1 to get images
-        location.setValue(1, forKey: "page")
-            do{
-                
-                try context.save()
-                dispatch_async(dispatch_get_main_queue())
-                {
-                print("location is saved")
-                completion(error: "")
-                }
-            }
-            catch
+        
+        let request = NSFetchRequest(entityName: "Pin")
+        request.predicate = NSPredicate(format: "latitude = %@ AND longitude = %@", lati, long)
+        do{
+            let results = try context.executeFetchRequest(request)
+            if results.count == 0
             {
-                dispatch_async(dispatch_get_main_queue())
+                //if location is not saved than save it
+                
+                let location = NSManagedObject(entity: entity!, insertIntoManagedObjectContext: context)
+                location.setValue(lati , forKey: "latitude")
+                location.setValue(long, forKey: "longitude")
+                location.setValue(span!.latitudeDelta, forKey: "latitudeDelta")
+                location.setValue(span!.longitudeDelta, forKey: "longitudeDelta")
+                //initially set page to no 1 to get images
+                location.setValue(1, forKey: "page")
+                do{
+                    
+                    try context.save()
+                    dispatch_async(dispatch_get_main_queue())
+                    {
+                        print("location is saved")
+                        completion(error: "")
+                    }
+                }
+                catch
                 {
-                completion(error: "Can not Save Location")
+                    dispatch_async(dispatch_get_main_queue())
+                    {
+                        completion(error: "Can not Save Location")
+                    }
                 }
             }
+        }
+        catch
+        {
+            completion(error: "Can not Save Location")
+        }
     }
     //CoreData: when Map Controller loads, get saved location from coredata
     func getLocation(completion: (locations: [NSManagedObject] ,error: String)-> Void)
