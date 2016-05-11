@@ -16,6 +16,7 @@ class Pin: NSManagedObject {
     static var pinInstance = Pin()
     var pageno: Int = 1
     var locations = [NSManagedObject]()
+    
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?)
     {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -103,15 +104,7 @@ class Pin: NSManagedObject {
     func deleteLocation(loc: CLLocationCoordinate2D, completion: (error: String)-> Void)
     {
         //remove images from document directory
-        Images.imagesInstance.removeImages(loc) { (error) in
-            dispatch_async(dispatch_get_main_queue())
-            {
-            if error != ""
-            {
-                completion(error: error)
-            }
-            else
-            {
+        Images.imagesInstance.removeImages(loc.latitude, long: loc.longitude)
                 let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
                 let context = appdelegate.managedObjectContext
                 let request = NSFetchRequest(entityName: "Pin")
@@ -148,9 +141,6 @@ class Pin: NSManagedObject {
                 {
                     completion(error: "Can Not Fetch Location")
                 }
-              }
-            }
-        }
     }
-   
+    
 }

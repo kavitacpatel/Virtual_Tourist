@@ -19,9 +19,7 @@ class FlickrApi: AnyObject
     
     func updateImages(coordinate:CLLocationCoordinate2D, completion:(error: String?) -> Void)
     {
-        Images.imagesInstance.removeImages(coordinate) { (error) in
-            completion(error: error)
-        }
+        Images.imagesInstance.removeImages(coordinate.latitude, long: coordinate.longitude)
         //first set new pageno than get images
         Pin.pinInstance.setNewPage(coordinate, completion: { (error) in
             if error != ""
@@ -67,7 +65,7 @@ class FlickrApi: AnyObject
                     //Save Photos to CoreData
                     dispatch_async(dispatch_get_main_queue())
                     {
-                            Images.imagesInstance.saveImages(coordinate, img: img!, imgName: self.photoId, completion: { (error) in
+                            Images.imagesInstance.saveImages(coordinate.latitude,long: coordinate.longitude, img: img!, imgName: self.photoId, completion: { (error) in
                                 completion(err: error)
                     })
                     }

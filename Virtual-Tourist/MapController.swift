@@ -94,9 +94,11 @@ class MapController: UIViewController, MKMapViewDelegate
         }
         else
         {
-            pointAnnotation.coordinate = newcoordinate
+            dispatch_async(dispatch_get_main_queue())
+            {
+            self.pointAnnotation.coordinate = newcoordinate
             self.performSegueWithIdentifier("detailSegue", sender: self)
-            
+            }
         }
     }
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?)

@@ -39,6 +39,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         screenHeight = screenSize.height
         refreshControl.addTarget(self, action: #selector(DetailViewController.refreshController), forControlEvents: .ValueChanged)
         photoCollectionView.addSubview(refreshControl)
+       photoCollectionView.sendSubviewToBack(refreshControl)
         cache = NSCache()
     }
     override func viewWillAppear(animated: Bool)
@@ -52,13 +53,12 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         //Clear cachedindex
         Images.imagesInstance.cachedImagesIndex.removeAll()
         //Get images of location from coreData
-        getPhotosCoredata()
-        //self.refreshController()
+        self.refreshController()
         
     }
     func refreshController()
     {
-        Images.imagesInstance.getImages(self.coordinate) { (error) in
+        Images.imagesInstance.getImages(coordinate.latitude,long: coordinate.longitude) { (error) in
             dispatch_async(dispatch_get_main_queue())
             {
                 if error != ""
@@ -75,6 +75,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     {
                         self.newCollectionBtn.enabled = true
                     }
+                self.showActivityInd(false)
                 self.photoCollectionView.reloadData()
                 self.refreshControl.endRefreshing()
                 }
@@ -99,8 +100,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
-        dispatch_async(dispatch_get_main_queue(), refreshController)
-        
+        //dispatch_async(dispatch_get_main_queue(), refreshController)
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
         cell.albumImage?.image = UIImage(named: "placeholder")
@@ -116,14 +116,11 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
                     let img = UIImage(contentsOfFile: fileURL.path!)
                     cell.albumImage.image = img
-
                    // self.cache?.setObject(img!, forKey: indexPath.row)
                 }
             }
         }
-        
         return cell
-        
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
@@ -166,14 +163,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     }
     @IBAction func removePictureBtnPressed(sender: AnyObject)
     {
-        Images.imagesInstance.removeSelectedImages(coordinate)
-        { (error) in
-            if error != ""
-            {
-                self.alertMsg("Error: Image-Delete", msg: error)
-            }
-        }
-     Images.imagesInstance.getImages(coordinate, completion: { (error) in
+        Images.imagesInstance.removeSelectedImages(coordinate.latitude, long: coordinate.longitude)
+        Images.imagesInstance.getImages(coordinate.latitude, long: coordinate.longitude, completion: { (error) in
          if error != ""
             {
                 self.alertMsg("Error: Photos", msg: error)
@@ -191,44 +182,12 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         getNewPhotos()
         
     }
-    func getPhotosCoredata()
-    {
-        Images.imagesInstance.getImages(self.coordinate) { (error) in
-        dispatch_async(dispatch_get_main_queue())
-        {
-           if error != ""
-            {
-                self.alertMsg("Error: Images", msg: error)
-            }
-            else
-            {
-                if Images.imagesInstance.imageList.count == 0
-                {
-                    self.newCollectionBtn.enabled = false
-                }
-                else
-                {
-                    self.newCollectionBtn.enabled = true
-                }
-                    self.showActivityInd(false)
-                    self.photoCollectionView.reloadData()
-            }
-        }
-        }
-    }
-
+    
     func getNewPhotos()
     {
         cache?.removeAllObjects()
         self.flickrObj.updateImages(self.coordinate) { (error) in
-            dispatch_async(dispatch_get_main_queue())
-            {
-            if error != ""
-            {
-                self.alertMsg("Error", msg: error!)
-                self.newCollectionBtn.enabled = false
-            }
-            }
+           dispatch_async(dispatch_get_main_queue(), self.refreshController)
         }
     }
 
