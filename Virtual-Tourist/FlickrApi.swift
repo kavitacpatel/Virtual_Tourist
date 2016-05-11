@@ -61,23 +61,29 @@ class FlickrApi: AnyObject
                 // Download Image
                 if let data = NSData(contentsOfURL: url)
                 {
-                    let img = UIImage(data: data)
-                    //Save Photos to CoreData
+                //Save Photos to CoreData
+                   
+                        let img = UIImage(data: data)
+                        Images.imagesInstance.saveImages(coordinate.latitude,long: coordinate.longitude, img: img!, imgName: self.photoId)
                     dispatch_async(dispatch_get_main_queue())
                     {
-                            Images.imagesInstance.saveImages(coordinate.latitude,long: coordinate.longitude, img: img!, imgName: self.photoId, completion: { (error) in
-                                completion(err: error)
-                    })
+                        completion(err: "")
                     }
                  }
                 else
                 {
-                    completion(err: "Error in Loading Photos")
+                    dispatch_async(dispatch_get_main_queue())
+                    {
+                        completion(err: "Error in Loading Photos")
+                    }
                 }
             }
         else
             {
-                completion(err: "Error in URL")
+                dispatch_async(dispatch_get_main_queue())
+                {
+                    completion(err: "Error in URL")
+                }
             }
     }
     func getFlickrData(page: Int,coordinate:CLLocationCoordinate2D,span: MKCoordinateSpan, completion:(error: String?) -> Void)

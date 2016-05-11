@@ -22,7 +22,7 @@ class Images: NSManagedObject
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    func saveImages(lati: NSNumber, long: NSNumber,img: UIImage, imgName : String,completion:(error: String)-> Void)
+    func saveImages(lati: NSNumber, long: NSNumber,img: UIImage, imgName : String)
     {
         let request = NSFetchRequest(entityName: "Pin")
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
@@ -36,14 +36,12 @@ class Images: NSManagedObject
                 for result in results
                 {
                     let pin = result as! Pin
-                dispatch_async(dispatch_get_main_queue())
-                {
                     let imagesEntity = NSEntityDescription.insertNewObjectForEntityForName("Images", inManagedObjectContext: context) as! Images
                     let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
                     let fileURL = documentsURL.URLByAppendingPathComponent("img\(imgName).png")
                     let pngImageData = UIImagePNGRepresentation(img)
                     let result = pngImageData!.writeToFile(fileURL.path!, atomically: true)
-                       if result
+                        if result
                         {
                             imagesEntity.setValue("img\(imgName).png", forKey: "imagesData")
                             pin.addImageObject(imagesEntity)
@@ -51,26 +49,23 @@ class Images: NSManagedObject
                             do{
                                
                                 try context.save()
-                                completion(error: "")
                                 }
                             catch
                             {
-                                completion(error:  "Can not Save Images")
+                                print("Can not Save Images")
                             }
                         }
                         else
                         {
-                            completion(error: "Can not save images to document directory")
+                            print( "Can not save images to document directory")
                         }
                     }
-                }
-                
             }
         }
         
         catch
         {
-            completion(error:  "Can not Save Images")
+            print( "Can not Save Images")
         }
     }
     
@@ -108,10 +103,10 @@ class Images: NSManagedObject
     }
     func removeImages(lati: NSNumber, long: NSNumber)
     {
+        let fileManager:NSFileManager = NSFileManager.defaultManager()
         let request = NSFetchRequest(entityName: "Images")
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
-        
         request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
         do
           {
@@ -119,6 +114,18 @@ class Images: NSManagedObject
             for img in self.imageList
             {
                     //remove path from coredata
+                  do{
+                        //remove from directory
+                        let imageName = img.valueForKey("imagesData")as! String
+                        let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                        let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+                        try fileManager.removeItemAtPath(fileURL.path!)
+                    }
+                    catch
+                    {
+                        print( "Can not remove from document directory")
+                    }
+
                     context.deleteObject(img)
                     do
                     {

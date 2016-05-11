@@ -100,7 +100,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
-        //dispatch_async(dispatch_get_main_queue(), refreshController)
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
         cell.albumImage?.image = UIImage(named: "placeholder")
@@ -116,7 +115,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
                     let img = UIImage(contentsOfFile: fileURL.path!)
                     cell.albumImage.image = img
-                   // self.cache?.setObject(img!, forKey: indexPath.row)
                 }
             }
         }
