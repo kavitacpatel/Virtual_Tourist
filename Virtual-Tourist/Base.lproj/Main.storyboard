@@ -83,7 +83,7 @@
         <!--Detail View Controller-->
         <scene sceneID="yfe-9m-xyf">
             <objects>
-                <viewController id="RiX-dJ-ITT" customClass="DetailViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="DetailViewControllerId" id="RiX-dJ-ITT" customClass="DetailViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="iXo-Qv-6gG"/>
                         <viewControllerLayoutGuide type="bottom" id="Uq5-6Y-UBA"/>
@@ -197,7 +197,7 @@
         <!--Navigation Controller-->
         <scene sceneID="d1k-ih-DjG">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="L2C-g9-m2b" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="StoryboardIDRootNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="L2C-g9-m2b" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="8zV-81-r1g">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>

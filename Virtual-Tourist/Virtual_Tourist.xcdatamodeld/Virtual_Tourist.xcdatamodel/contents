@@ -2,18 +2,18 @@
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="10174" systemVersion="15E65" minimumToolsVersion="Automatic">
     <entity name="Images" representedClassName=".Images" syncable="YES">
         <attribute name="imagesData" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="pin" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Pin" inverseName="images" inverseEntity="Pin" syncable="YES"/>
+        <relationship name="pin" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Pin" inverseName="images" inverseEntity="Pin" syncable="YES"/>
     </entity>
     <entity name="Pin" representedClassName=".Pin" syncable="YES">
-        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0" syncable="YES"/>
         <attribute name="latitudeDelta" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
-        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
         <attribute name="longitudeDelta" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
         <attribute name="page" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Images" inverseName="pin" inverseEntity="Images" syncable="YES"/>
     </entity>
     <elements>
         <element name="Images" positionX="313" positionY="-180" width="128" height="75"/>
-        <element name="Pin" positionX="7" positionY="-168" width="128" height="133"/>
+        <element name="Pin" positionX="7" positionY="-168" width="128" height="135"/>
     </elements>
 </model>

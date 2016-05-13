@@ -13,7 +13,7 @@ import UIKit
 
 class Images: NSManagedObject
 {
-    
+   /*
     static var imagesInstance = Images()
     var cachedImagesIndex = [Int]()
     var imageList = [NSManagedObject]()
@@ -74,7 +74,7 @@ class Images: NSManagedObject
     {
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let context = appdelegate.managedObjectContext
-        let pageRequest = NSFetchRequest(entityName: "Pin")
+       /* let pageRequest = NSFetchRequest(entityName: "Pin")
         pageRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", lati, long)
         
         //Get Page no of current location URL
@@ -88,7 +88,7 @@ class Images: NSManagedObject
         catch
         {
             completion(error: "Can not Load Photos")
-        }
+        }*/
         let request = NSFetchRequest(entityName: "Images")
         request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
         //get Images of current location
@@ -191,5 +191,5 @@ class Images: NSManagedObject
             cachedImagesIndex.removeAll()
             print( "Photo is Not Deleted")
         }
-    }    
+    } */
 }

@@ -23,7 +23,7 @@ class Pin: NSManagedObject {
         
     }
    //set New Page no.
-    func setNewPage(location: CLLocationCoordinate2D)
+   /* func setNewPage(location: CLLocationCoordinate2D)
     {
         pageno = pageno + 1
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
@@ -45,9 +45,9 @@ class Pin: NSManagedObject {
         {
             print( "Can not set new page")
         }
-    }
+    }*/
 
-    func saveLocation(loc: CLLocationCoordinate2D, span: MKCoordinateSpan?, completion: (error: String)-> Void)
+  /*  func saveLocation(loc: CLLocationCoordinate2D, span: MKCoordinateSpan?, completion: (error: String)-> Void)
     {
         let lati = loc.latitude as NSNumber
         let long = loc.longitude as NSNumber
@@ -92,9 +92,9 @@ class Pin: NSManagedObject {
         {
             completion(error: "Can not Save Location")
         }
-    }
+    }*/
     //CoreData: when Map Controller loads, get saved location from coredata
-    func getLocation(completion: (locations: [NSManagedObject] ,error: String)-> Void)
+  /*  func getLocation(completion: (locations: [NSManagedObject] ,error: String)-> Void)
     {
         let request = NSFetchRequest(entityName: "Pin")
         let appdelegate = UIApplication.sharedApplication().delegate as! AppDelegate
@@ -109,10 +109,10 @@ class Pin: NSManagedObject {
             completion(locations: locations, error: "Can not Load Locations")
         }
     }
-    
+    */
     
     //CoreData: Delete Pin and Related Images
-    func deleteLocation(loc: CLLocationCoordinate2D, completion: (error: String)-> Void)
+   /* func deleteLocation(loc: CLLocationCoordinate2D, completion: (error: String)-> Void)
     {
         //remove images from document directory
         Images.imagesInstance.removeImages(loc.latitude, long: loc.longitude)
@@ -153,5 +153,5 @@ class Pin: NSManagedObject {
                     completion(error: "Can Not Fetch Location")
                 }
     }
-    
+ */   
 }
