@@ -19,6 +19,11 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     @IBOutlet weak var activityInd: UIActivityIndicatorView!
     var annotation = MKPointAnnotation()
     var coordinate = CLLocationCoordinate2D()
+    var lati : NSNumber = 0.0
+    var long: NSNumber = 0.0
+    var currentPageNo: Int = 1
+    // if location is loading first time than download images from API
+    var currentPinFlag = false
     var imageArray:[UIImage] = [UIImage]()
     let flickrObj = FlickrApi()
     var screenSize: CGRect!
@@ -28,6 +33,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     var cache: NSCache?
     var cachedImagesIndex = [String]()
     var managedObjectContext: NSManagedObjectContext!
+    var photoDictionary = NSMutableArray()
+    var updateStatus = false
     
     //Fetch record
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -48,6 +55,17 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     override func viewDidLoad()
     {
         super.viewDidLoad()
+        coordinate = annotation.coordinate
+        lati = annotation.coordinate.latitude as NSNumber
+        long = annotation.coordinate.longitude as NSNumber
+        print(currentPinFlag)
+        if currentPinFlag
+        {
+            // location is coming first time, download images from api
+            updateStatus = true
+            getFlickrData()
+        }
+
         photoCollectionView.dataSource = self
         photoCollectionView.delegate = self
         photoCollectionView.allowsMultipleSelection = true
@@ -61,15 +79,20 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     override func viewWillAppear(animated: Bool)
     {
         super.viewWillAppear(animated)
-        let lati = annotation.coordinate.latitude as NSNumber
-        let long = annotation.coordinate.longitude as NSNumber
-        let predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long) as NSPredicate
-        self.fetchedResultsController.fetchRequest.predicate = predicate
+        coordinate = annotation.coordinate
+        lati = annotation.coordinate.latitude as NSNumber
+        long = annotation.coordinate.longitude as NSNumber
+        print(currentPinFlag)
+
+        // already images are dowanloaded, fetch from coredata
+    
+            let predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long) as NSPredicate
+            self.fetchedResultsController.fetchRequest.predicate = predicate
             do
             {
                     try self.fetchedResultsController.performFetch()
                     newCollectionBtn.enabled = true
-                    self.photoCollectionView.reloadData()
+                    //self.photoCollectionView.reloadData()
             }
             catch
             {
@@ -78,7 +101,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     print("\(fetchError), \(fetchError.userInfo)")
             }
         mapView.addAnnotation(annotation)
-        coordinate = annotation.coordinate
         let region = MKCoordinateRegionMakeWithDistance(coordinate, 4000, 4000)
         self.mapView.setRegion(region, animated: true)
         //Clear cachedindex
@@ -99,34 +121,50 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         return 1
     }
-
+    
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
         cell.albumImage.image = UIImage(named: "placeholder")
-        self.configureCell(cell, atIndexPath: indexPath) { (cell) in
-            return cell
-        }
-        showActivityInd(false)
+        self.configureCell(cell, atIndexPath: indexPath)
         return cell
     }
-    func configureCell(cell: imageCellCollectionViewCell, atIndexPath indexPath: NSIndexPath, completion: (cell: imageCellCollectionViewCell)-> Void)
+    func configureCell(cell: imageCellCollectionViewCell, atIndexPath indexPath: NSIndexPath)
     {
-        // Fetch Record
-        let record = fetchedResultsController.objectAtIndexPath(indexPath)
-        
-        // Update Cell
-            if let imgName = record.valueForKey("imagesData") as? String
+        if updateStatus
+        {
+           if photoDictionary.count != 0
+           {
+            getFlickrImage(photoDictionary[indexPath.row].valueForKey("farm") as! Int, serverid: photoDictionary[indexPath.row].valueForKey("server") as! String, photoid: photoDictionary[indexPath.row].valueForKey("id") as! String, secret: photoDictionary[indexPath.row].valueForKey("secret") as! String ,completion: { (img) in
+                   cell.albumImage.image = img
+                if indexPath.row == self.photoDictionary.count-1
+                {
+                    self.updateStatus = false
+                    self.showActivityInd(false)
+                }
+            })
+        }
+        }
+        else
+        {
+            // Fetch Record
+            if let record: NSManagedObject? = fetchedResultsController.objectAtIndexPath(indexPath) as? NSManagedObject
             {
-                let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
-                let img = UIImage(contentsOfFile: fileURL.path!)
-                    cell.albumImage.image = img
-                    completion(cell: cell)
+                if let imgName = record!.valueForKey("imagesData") as? String
+                {
+                    newCollectionBtn.enabled = true
+                    showActivityInd(false)
+                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                    let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
+                    let img = UIImage(contentsOfFile: fileURL.path!)
+                       cell.albumImage.image = img
+                    
+                }
             }
+        }
     }
-        
+
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
     {
         if let cell = collectionView.cellForItemAtIndexPath(indexPath)
@@ -170,109 +208,199 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-       //return Images.imagesInstance.imageList.count
-        if let sections = fetchedResultsController.sections {
-            let sectionInfo = sections[section]
-            return sectionInfo.numberOfObjects
+        if photoDictionary.count != 0
+        {
+            return photoDictionary.count
         }
-        
+        else
+        {
+            if let sections = fetchedResultsController.sections
+            {
+                let sectionInfo = sections[section]
+                return sectionInfo.numberOfObjects
+            }
+        }
         return 0
-        
     }
     
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
     {
         showActivityInd(true)
-        newCollectionBtn.enabled = false
         cache?.removeAllObjects()
         //remove old images
         removeAllImages()
-        //first set new pageno than get images
-        setNewPage()
-        MapController.instance.getFlickrData(coordinate,context: managedObjectContext) { (error) in
-            if error == ""
+        currentPageNo = currentPageNo + 1
+        self.getFlickrData()
+        updateStatus = true
+    }
+    
+    func getFlickrData()
+    {
+        
+        setNewPage() // set page if called new button or set flag after first time location downloaded
+        
+        // get data of dropped pin location
+        let flickrObj = FlickrApi()
+        print(currentPageNo)
+        flickrObj.getFlickrData(currentPageNo, coordinate: coordinate, completion: { (photoDict, error) in
+            if photoDict != nil
+                {
+                    dispatch_async(dispatch_get_main_queue())
+                    {
+                      self.photoDictionary = photoDict! as! NSMutableArray
+                      self.photoCollectionView.reloadData()
+                    }
+                }
+                else
+                {
+                    self.alertMsg("Error: SaveImages", msg: "Can not save images")
+                    self.newCollectionBtn.enabled = false
+                }
+        })
+       
+    }
+    func getFlickrImage(farmid: NSNumber, serverid: String,photoid: String, secret: String,completion:(img: UIImage)-> Void)
+    {
+        let size = "z"
+        let photoURL = "https://farm\(farmid).staticflickr.com/\(serverid)/\(photoid)_\(secret)_\(size).jpg"
+        if let url = NSURL(string: photoURL)
+        {
+            // Download Image
+            if let data = NSData(contentsOfURL: url)
             {
-                self.photoCollectionView.reloadData()
-                self.newCollectionBtn.enabled = true
+                //Save Photos to CoreData
+                let img = UIImage(data: data)
+                        self.saveImages(img!, imgName: photoid, completion: { (error) in
+                        if error != ""
+                        {
+                            print(error)
+                        }
+                        else{
+                            completion(img: img!)
+                        }
+                    })
             }
             else
             {
-                self.newCollectionBtn.enabled = false
+                self.alertMsg("Loading Images", msg:"Error in Loading Photos")
             }
         }
+        else
+        {
+            self.alertMsg("Loading Images", msg:"Error in URL")
+        }
     }
-
-    @IBAction func removePictureBtnPressed(sender: AnyObject)
+    func saveImages(img: UIImage, imgName : String,completion:(error: String?) -> Void)
     {
-            let fileManager:NSFileManager = NSFileManager.defaultManager()
-            let request = NSFetchRequest(entityName: "Images")
-            let lati = coordinate.latitude as NSNumber
-            let long = coordinate.longitude as NSNumber
-            request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
-            do{
-                let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
-                if cachedImagesIndex.count > 0
+        let request = NSFetchRequest(entityName: "Pin")
+        request.predicate = NSPredicate(format: "latitude = %@ AND longitude = %@", lati, long)
+        do{
+            let results = try managedObjectContext.executeFetchRequest(request)
+            if results.count > 0
+            {
+                for result in results
                 {
-                    for index in 0...cachedImagesIndex.count-1
+                    let pin = result as! Pin
+                    let imagesEntity = NSEntityDescription.insertNewObjectForEntityForName("Images", inManagedObjectContext: managedObjectContext) as! Images
+                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                    let fileURL = documentsURL.URLByAppendingPathComponent("img\(imgName).png")
+                    let pngImageData = UIImagePNGRepresentation(img)
+                    let result = pngImageData!.writeToFile(fileURL.path!, atomically: true)
+                    if result
                     {
-                        for img in imageList
+                        imagesEntity.setValue("img\(imgName).png", forKey: "imagesData")
+                        pin.addImageObject(imagesEntity)
+                        imagesEntity.pin = pin
+                        dispatch_async(dispatch_get_main_queue())
                         {
-                            if cachedImagesIndex[index] == img.valueForKey("imagesData") as! String
+                            do
                             {
-                                do{
-                                    //remove from directory
-                                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                                    let fileURL = documentsURL.URLByAppendingPathComponent(cachedImagesIndex[index])
-                                    try fileManager.removeItemAtPath(fileURL.path!)
-                                }
-                                catch
-                                {
-                                    print( "Can not remove from document directory")
-                                }
-                                do
-                                {
-                                    managedObjectContext.deleteObject(img)
-                                    try managedObjectContext.save()
-                                }
-                                catch
-                                {
-                                    print( "Photo Deletion Error")
-                                }
+                                try self.managedObjectContext.save()
+                                completion(error: "")
+                            }
+                            catch
+                            {
+                                completion(error: "Can not Save Images")
                             }
                         }
                     }
+                    else
+                    {
+                        completion(error: "Can not save images to document directory")
+                    }
                 }
             }
-            catch
-            {
-                cachedImagesIndex.removeAll()
-                print( "Photo is Not Deleted")
-            }
-        removePicture.hidden = true
-        newCollectionBtn.hidden = false
-        photoCollectionView.reloadData()
+        }
+        catch
+        {
+            completion(error: "Can not Save Images")
+        }
     }
     func removeAllImages()
     {
         let fileManager:NSFileManager = NSFileManager.defaultManager()
         let request = NSFetchRequest(entityName: "Images")
-        let lati = coordinate.latitude as NSNumber
-        let long = coordinate.longitude as NSNumber
         request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
         do{
             let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
-                  for img in imageList
+            for img in imageList
+            {
+                do{
+                    //remove from directory
+                    let imageName = img.valueForKey("imagesData")as! String
+                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                    let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+                    try fileManager.removeItemAtPath(fileURL.path!)
+                }
+                catch
+                {
+                    //print( "Can not remove from document directory")
+                }
+                do
+                {
+                    managedObjectContext.deleteObject(img)
+                    try managedObjectContext.save()
+                    //first set new pageno than get images
+                    
+                }
+                catch
+                {
+                    print( "Photo Deletion Error")
+                }
+            }
+        }
+        catch
+        {
+            cachedImagesIndex.removeAll()
+            print( "Photo is Not Deleted")
+        }
+       
+    }
+    //remove selected images
+    @IBAction func removePictureBtnPressed(sender: AnyObject)
+    {
+        let fileManager:NSFileManager = NSFileManager.defaultManager()
+        let request = NSFetchRequest(entityName: "Images")
+        request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
+        do{
+            let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
+            if cachedImagesIndex.count > 0
+            {
+                for index in 0...cachedImagesIndex.count-1
+                {
+                    for img in imageList
                     {
-                          do{
+                        if cachedImagesIndex[index] == img.valueForKey("imagesData") as! String
+                        {
+                            do{
                                 //remove from directory
-                                let imageName = img.valueForKey("imagesData")as! String
                                 let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                                let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
+                                let fileURL = documentsURL.URLByAppendingPathComponent(cachedImagesIndex[index])
                                 try fileManager.removeItemAtPath(fileURL.path!)
                             }
                             catch
                             {
-                                print( "Can not remove from document directory")
+                                //print( "Can not remove from document directory")
                             }
                             do
                             {
@@ -284,7 +412,10 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                                 print( "Photo Deletion Error")
                             }
                         }
+                    }
+                }
             }
+        }
         catch
         {
             cachedImagesIndex.removeAll()
@@ -294,12 +425,9 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         newCollectionBtn.hidden = false
         photoCollectionView.reloadData()
     }
-   
+
     func setNewPage()
     {
-        MapController.instance.pageno = MapController.instance.pageno + 1
-        let lati = coordinate.latitude as NSNumber
-        let long = coordinate.longitude as NSNumber
         let pageRequest = NSFetchRequest(entityName: "Pin")
         pageRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", lati, long)
         
@@ -308,22 +436,14 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
             let pages = try managedObjectContext.executeFetchRequest(pageRequest)
             for page_no in pages
             {
-                page_no.setValue(MapController.instance.pageno, forKey: "page")
+                page_no.setValue(currentPageNo, forKey: "page")
+                page_no.setValue(false, forKey: "firstTimeFlag")
             }
         }
         catch
         {
             print( "Can not set new page")
         }
-    }
-
-    func mapViewDidFinishLoadingMap(mapView: MKMapView)
-    {
-        showActivityInd(false)
-    }
-    func controllerWillChangeContent(controller: NSFetchedResultsController)
-    {
-     
     }
     func controllerDidChangeContent(controller: NSFetchedResultsController)
     {

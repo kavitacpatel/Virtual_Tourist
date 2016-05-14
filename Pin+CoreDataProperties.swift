@@ -20,6 +20,7 @@ extension Pin {
     @NSManaged var longitudeDelta: NSNumber?
     @NSManaged var page: NSNumber?
     @NSManaged var images: NSString?
+    @NSManaged var firstTimeFlag: NSNumber?
     func addImageObject(value:Images) {
         let image = self.mutableSetValueForKey("images");
         image.addObject(value)

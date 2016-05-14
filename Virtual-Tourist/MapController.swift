@@ -20,6 +20,7 @@ class MapController: UIViewController, MKMapViewDelegate
     var editState = false
     static var instance = MapController()
     var pageno: Int = 1
+    var currentPinFlag = false
     var pointAnnotation = MKPointAnnotation()
     var managedObjectContext: NSManagedObjectContext!
     
@@ -73,6 +74,8 @@ class MapController: UIViewController, MKMapViewDelegate
         let secondVC: DetailViewController = segue.destinationViewController as! DetailViewController
         secondVC.annotation = pointAnnotation
         secondVC.managedObjectContext = managedObjectContext
+        secondVC.currentPageNo = pageno
+        secondVC.currentPinFlag = currentPinFlag
     }
     @IBAction func editBtnPressed(sender: AnyObject)
     {
@@ -101,120 +104,15 @@ class MapController: UIViewController, MKMapViewDelegate
          mapView.addAnnotation(annotation)
          mapSpan = mapView.region.span
          saveLocation(coordinate, span: mapSpan)
-         getFlickrData(coordinate,context: managedObjectContext, completion: { (error) in
+         /*getFlickrData(coordinate,context: managedObjectContext, completion: { (error) in
             if error != ""
             {
                 self.alertMsg("Error: SaveImages", msg: error)
             }
             self.showActivityInd(false)
-         })
+         })*/
       }
     }
-    func getFlickrData(coordinate: CLLocationCoordinate2D,context: NSManagedObjectContext,completion: (error: String)-> Void)
-    {
-        // get data of dropped pin location
-        let flickrObj = FlickrApi()
-        flickrObj.getFlickrData(pageno, coordinate: coordinate, completion: { (photoDict, error) in
-            dispatch_async(dispatch_get_main_queue())
-            {
-                if photoDict != nil
-                {
-                    //get photos
-                    for photo in photoDict!
-                    {
-                        let farmId = photo.valueForKey("farm") as! NSNumber
-                        let serverId = photo.valueForKey("server") as! String
-                        let photoId = photo.valueForKey("id") as! String
-                        let secret = photo.valueForKey("secret") as! String
-                        
-                        //Get Flickr Images
-                        self.getFlickrImage(farmId, serverid: serverId, photoid: photoId, secret: secret, coordinate: coordinate, context: context)
-                        completion(error: "")
-                    }
-                }
-                else
-                {
-                    self.alertMsg("Error: SaveImages", msg: "Can not save images")
-                    
-                }
-            }
-        })
-        
-    }
-    func getFlickrImage(farmid: NSNumber, serverid: String,photoid: String, secret: String ,coordinate: CLLocationCoordinate2D,context: NSManagedObjectContext)
-    {
-        let size = "z"
-        let photoURL = "https://farm\(farmid).staticflickr.com/\(serverid)/\(photoid)_\(secret)_\(size).jpg"
-        if let url = NSURL(string: photoURL)
-        {
-            // Download Image
-            if let data = NSData(contentsOfURL: url)
-            {
-                //Save Photos to CoreData
-                let img = UIImage(data: data)
-                dispatch_async(dispatch_get_main_queue())
-                {
-                    self.saveImages(coordinate,context: context, img: img!, imgName: photoid)
-                }
-            }
-            else
-            {
-                self.alertMsg("Loading Images", msg:"Error in Loading Photos")
-            }
-        }
-        else
-        {
-                self.alertMsg("Loading Images", msg:"Error in URL")
-        }
-    }
-    func saveImages(coordinate:CLLocationCoordinate2D,context: NSManagedObjectContext,img: UIImage, imgName : String)
-    {
-        let lati = coordinate.latitude as NSNumber
-        let long = coordinate.longitude as NSNumber
-        let request = NSFetchRequest(entityName: "Pin")
-        request.predicate = NSPredicate(format: "latitude = %@ AND longitude = %@", lati, long)
-        do{
-            let results = try context.executeFetchRequest(request)
-            if results.count > 0
-            {
-                for result in results
-                {
-                    let pin = result as! Pin
-                    let imagesEntity = NSEntityDescription.insertNewObjectForEntityForName("Images", inManagedObjectContext: context) as! Images
-                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                    let fileURL = documentsURL.URLByAppendingPathComponent("img\(imgName).png")
-                    let pngImageData = UIImagePNGRepresentation(img)
-                    let result = pngImageData!.writeToFile(fileURL.path!, atomically: true)
-                    if result
-                    {
-                        imagesEntity.setValue("img\(imgName).png", forKey: "imagesData")
-                        pin.addImageObject(imagesEntity)
-                        imagesEntity.pin = pin
-                        dispatch_async(dispatch_get_main_queue())
-                        {
-                            do
-                            {
-                                try context.save()
-                            }
-                            catch
-                            {
-                                print("Can not Save Images")
-                            }
-                        }
-                    }
-                    else
-                    {
-                        print( "Can not save images to document directory")
-                    }
-                }
-            }
-        }
-        catch
-        {
-            print( "Can not Save Images")
-        }
-    }
-
     func removeImages(lati: NSNumber, long: NSNumber)
     {
         //cascade relationship automatically delete images from table
@@ -259,6 +157,7 @@ class MapController: UIViewController, MKMapViewDelegate
                 for location in locations
                 {
                     pageno = location.valueForKey("page") as! Int
+                    currentPinFlag = location.valueForKey("firstTimeFlag") as! Bool
                 }
             }
             catch
@@ -313,6 +212,7 @@ class MapController: UIViewController, MKMapViewDelegate
                 location.setValue(long, forKey: "longitude")
                 location.setValue(span!.latitudeDelta, forKey: "latitudeDelta")
                 location.setValue(span!.longitudeDelta, forKey: "longitudeDelta")
+                location.setValue(true, forKey: "firstTimeFlag")
                 //initially set page to no 1 to get images
                 location.setValue(1, forKey: "page")
                 do{

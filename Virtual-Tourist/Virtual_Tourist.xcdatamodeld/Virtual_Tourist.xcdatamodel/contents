@@ -5,6 +5,7 @@
         <relationship name="pin" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Pin" inverseName="images" inverseEntity="Pin" syncable="YES"/>
     </entity>
     <entity name="Pin" representedClassName=".Pin" syncable="YES">
+        <attribute name="firstTimeFlag" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0" syncable="YES"/>
         <attribute name="latitudeDelta" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
         <attribute name="longitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
@@ -14,6 +15,6 @@
     </entity>
     <elements>
         <element name="Images" positionX="313" positionY="-180" width="128" height="75"/>
-        <element name="Pin" positionX="7" positionY="-168" width="128" height="135"/>
+        <element name="Pin" positionX="7" positionY="-168" width="128" height="150"/>
     </elements>
 </model>
