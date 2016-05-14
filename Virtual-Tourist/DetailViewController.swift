@@ -35,6 +35,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     var managedObjectContext: NSManagedObjectContext!
     var photoDictionary = [AnyObject]()
     var updateStatus = false
+    var numberOfCell = 10
     
     //Fetch record
     lazy var fetchedResultsController: NSFetchedResultsController? = {
@@ -124,12 +125,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
+        cell.albumImage.image = UIImage(named: "placeholder")
         self.configureCell(cell, atIndexPath: indexPath)
         return cell
     }
     func configureCell(cell: imageCellCollectionViewCell, atIndexPath indexPath: NSIndexPath)
     {
-        cell.albumImage.image = UIImage(named: "placeholder")
+        
         if updateStatus
         {
            if photoDictionary.count != 0
@@ -214,9 +216,9 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-        if photoDictionary.count != 0
+      /*  if photoDictionary.count != 0
         {
-            return photoDictionary.count
+            return self.photoDictionary.count
         }
         else
         {
@@ -225,8 +227,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                 let sectionInfo = sections[section]
                 return sectionInfo.numberOfObjects
             }
-        }
-        return 0
+        }*/
+        return numberOfCell
     }
     
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
@@ -259,6 +261,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                              self.newCollectionBtn.enabled = false
                              self.showActivityInd(false)
                            }
+                        self.numberOfCell = self.photoDictionary.count
                             self.photoCollectionView.reloadData()
                     }
                 }
