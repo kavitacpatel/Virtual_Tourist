@@ -33,11 +33,11 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     var cache: NSCache?
     var cachedImagesIndex = [String]()
     var managedObjectContext: NSManagedObjectContext!
-    var photoDictionary = NSMutableArray()
+    var photoDictionary = [AnyObject]()
     var updateStatus = false
     
     //Fetch record
-    lazy var fetchedResultsController: NSFetchedResultsController = {
+    lazy var fetchedResultsController: NSFetchedResultsController? = {
         // Initialize Fetch Request
         let fetchRequest = NSFetchRequest(entityName: "Images")
         // Add Sort Descriptors
@@ -82,15 +82,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         coordinate = annotation.coordinate
         lati = annotation.coordinate.latitude as NSNumber
         long = annotation.coordinate.longitude as NSNumber
-        print(currentPinFlag)
-
         // already images are dowanloaded, fetch from coredata
     
             let predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long) as NSPredicate
-            self.fetchedResultsController.fetchRequest.predicate = predicate
+            self.fetchedResultsController!.fetchRequest.predicate = predicate
             do
             {
-                    try self.fetchedResultsController.performFetch()
+                    try self.fetchedResultsController!.performFetch()
                     newCollectionBtn.enabled = true
                     //self.photoCollectionView.reloadData()
             }
@@ -126,18 +124,21 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
-        cell.albumImage.image = UIImage(named: "placeholder")
         self.configureCell(cell, atIndexPath: indexPath)
         return cell
     }
     func configureCell(cell: imageCellCollectionViewCell, atIndexPath indexPath: NSIndexPath)
     {
+        cell.albumImage.image = UIImage(named: "placeholder")
         if updateStatus
         {
            if photoDictionary.count != 0
            {
             getFlickrImage(photoDictionary[indexPath.row].valueForKey("farm") as! Int, serverid: photoDictionary[indexPath.row].valueForKey("server") as! String, photoid: photoDictionary[indexPath.row].valueForKey("id") as! String, secret: photoDictionary[indexPath.row].valueForKey("secret") as! String ,completion: { (img) in
-                   cell.albumImage.image = img
+                dispatch_async(dispatch_get_main_queue())
+                {
+                      cell.albumImage.image = img
+                }
                 if indexPath.row == self.photoDictionary.count-1
                 {
                     self.updateStatus = false
@@ -149,17 +150,22 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         else
         {
             // Fetch Record
-            if let record: NSManagedObject? = fetchedResultsController.objectAtIndexPath(indexPath) as? NSManagedObject
+            if fetchedResultsController?.objectAtIndexPath(indexPath).count != 0
             {
-                if let imgName = record!.valueForKey("imagesData") as? String
+                if let record: NSManagedObject? = self.fetchedResultsController!.objectAtIndexPath(indexPath) as? NSManagedObject
                 {
-                    newCollectionBtn.enabled = true
-                    showActivityInd(false)
-                    let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                    let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
-                    let img = UIImage(contentsOfFile: fileURL.path!)
-                       cell.albumImage.image = img
-                    
+                    if let imgName = record!.valueForKey("imagesData") as? String
+                    {
+                        self.newCollectionBtn.enabled = true
+                        self.showActivityInd(false)
+                        let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                        let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
+                        dispatch_async(dispatch_get_main_queue())
+                        {
+                            let img = UIImage(contentsOfFile: fileURL.path!)
+                            cell.albumImage.image = img
+                        }
+                    }
                 }
             }
         }
@@ -173,7 +179,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
          // show Remove Selected Pictures button
          removePicture.hidden = false
          newCollectionBtn.hidden = true
-            let record = fetchedResultsController.objectAtIndexPath(indexPath)
+            let record = fetchedResultsController!.objectAtIndexPath(indexPath)
             if let imgName = record.valueForKey("imagesData") as? String
             {
                cachedImagesIndex.append(imgName)
@@ -187,7 +193,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         {
             cell.alpha = 1.0
             let cnt = cachedImagesIndex.count - 1
-            let record = fetchedResultsController.objectAtIndexPath(indexPath)
+            let record = fetchedResultsController!.objectAtIndexPath(indexPath)
             let imgName = record.valueForKey("imagesData") as? String
             for index in 0...cnt
             {
@@ -214,7 +220,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         }
         else
         {
-            if let sections = fetchedResultsController.sections
+            if let sections = fetchedResultsController!.sections
             {
                 let sectionInfo = sections[section]
                 return sectionInfo.numberOfObjects
@@ -227,28 +233,33 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         showActivityInd(true)
         cache?.removeAllObjects()
+        photoDictionary.removeAll()
         //remove old images
         removeAllImages()
-        currentPageNo = currentPageNo + 1
-        self.getFlickrData()
-        updateStatus = true
+        getFlickrData()
+        self.updateStatus = true
     }
     
     func getFlickrData()
     {
         
-        setNewPage() // set page if called new button or set flag after first time location downloaded
-        
+         // set page if called new button or set flag after first time location downloaded
+        currentPageNo = currentPageNo + 1
+         setNewPage()
         // get data of dropped pin location
         let flickrObj = FlickrApi()
-        print(currentPageNo)
         flickrObj.getFlickrData(currentPageNo, coordinate: coordinate, completion: { (photoDict, error) in
             if photoDict != nil
                 {
                     dispatch_async(dispatch_get_main_queue())
                     {
-                      self.photoDictionary = photoDict! as! NSMutableArray
-                      self.photoCollectionView.reloadData()
+                            self.photoDictionary = photoDict! as [AnyObject]
+                           if self.photoDictionary.count == 0
+                           {
+                             self.newCollectionBtn.enabled = false
+                             self.showActivityInd(false)
+                           }
+                            self.photoCollectionView.reloadData()
                     }
                 }
                 else
@@ -259,7 +270,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         })
        
     }
-    func getFlickrImage(farmid: NSNumber, serverid: String,photoid: String, secret: String,completion:(img: UIImage)-> Void)
+    func getFlickrImage(farmid: NSNumber, serverid: String,photoid: String, secret: String,completion:(img: UIImage?)-> Void)
     {
         let size = "z"
         let photoURL = "https://farm\(farmid).staticflickr.com/\(serverid)/\(photoid)_\(secret)_\(size).jpg"

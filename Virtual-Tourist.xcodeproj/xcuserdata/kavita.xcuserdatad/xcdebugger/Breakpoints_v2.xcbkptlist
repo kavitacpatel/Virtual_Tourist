@@ -38,12 +38,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Virtual-Tourist/DetailViewController.swift"
-            timestampString = "484880236.15668"
+            timestampString = "484942315.084308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "152"
-            endingLineNumber = "152"
-            landmarkName = "configureCell(_:atIndexPath:)"
+            startingLineNumber = "442"
+            endingLineNumber = "442"
+            landmarkName = "setNewPage()"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -54,28 +54,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Virtual-Tourist/DetailViewController.swift"
-            timestampString = "484881131.577469"
+            timestampString = "484942315.084308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "267"
-            endingLineNumber = "267"
-            landmarkName = "getFlickrImage(_:serverid:photoid:secret:completion:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Virtual-Tourist/DetailViewController.swift"
-            timestampString = "484880499.357255"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "135"
-            endingLineNumber = "135"
-            landmarkName = "configureCell(_:atIndexPath:)"
+            startingLineNumber = "257"
+            endingLineNumber = "257"
+            landmarkName = "getFlickrData()"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

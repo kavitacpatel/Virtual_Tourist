@@ -134,7 +134,7 @@
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
-                                        <color key="backgroundColor" red="0.98043292760848999" green="0.97220855951309204" blue="0.99274474382400513" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstItem="8gV-xw-lIr" firstAttribute="leading" secondItem="WXx-lV-Vek" secondAttribute="leading" id="G5p-5g-1jg"/>
                                             <constraint firstItem="8gV-xw-lIr" firstAttribute="top" secondItem="WXx-lV-Vek" secondAttribute="top" id="TNB-hH-U2k"/>
