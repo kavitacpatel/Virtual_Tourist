@@ -128,29 +128,37 @@
                                             <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8gV-xw-lIr">
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="placeholder" translatesAutoresizingMaskIntoConstraints="NO" id="8gV-xw-lIr">
                                                     <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
                                                 </imageView>
+                                                <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="nVc-YX-9cD">
+                                                    <rect key="frame" x="57" y="56" width="37" height="37"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="37" id="E2M-Uh-c4D"/>
+                                                        <constraint firstAttribute="height" constant="37" id="zat-ko-GGB"/>
+                                                    </constraints>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
+                                            <constraint firstItem="nVc-YX-9cD" firstAttribute="leading" secondItem="WXx-lV-Vek" secondAttribute="leadingMargin" constant="49" id="C7W-KC-FbY"/>
                                             <constraint firstItem="8gV-xw-lIr" firstAttribute="leading" secondItem="WXx-lV-Vek" secondAttribute="leading" id="G5p-5g-1jg"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="nVc-YX-9cD" secondAttribute="trailing" constant="48" id="TJt-K3-ZNd"/>
                                             <constraint firstItem="8gV-xw-lIr" firstAttribute="top" secondItem="WXx-lV-Vek" secondAttribute="top" id="TNB-hH-U2k"/>
                                             <constraint firstAttribute="bottom" secondItem="8gV-xw-lIr" secondAttribute="bottom" id="fZr-Mr-3bf"/>
                                             <constraint firstAttribute="trailing" secondItem="8gV-xw-lIr" secondAttribute="trailing" id="w2a-IG-Bth"/>
+                                            <constraint firstItem="nVc-YX-9cD" firstAttribute="top" secondItem="WXx-lV-Vek" secondAttribute="topMargin" constant="48" id="yBb-OJ-S49"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="nVc-YX-9cD" secondAttribute="bottom" constant="49" id="ysC-NF-FLt"/>
                                         </constraints>
                                         <connections>
+                                            <outlet property="activityInd" destination="nVc-YX-9cD" id="HfX-k4-oMi"/>
                                             <outlet property="albumImage" destination="8gV-xw-lIr" id="dne-Cc-Lda"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
-                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="93d-yj-9ME">
-                                <rect key="frame" x="282" y="282" width="37" height="37"/>
-                                <color key="color" red="0.9671815037727356" green="0.27705135941505432" blue="0.021931847557425499" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </activityIndicatorView>
                             <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZX8-8d-CDX">
                                 <rect key="frame" x="166" y="558" width="268" height="30"/>
                                 <constraints>
@@ -172,18 +180,15 @@
                             <constraint firstItem="EPc-bK-Hds" firstAttribute="leading" secondItem="dAf-RO-cZZ" secondAttribute="leadingMargin" constant="-20" id="GXq-5s-2xN"/>
                             <constraint firstItem="EPc-bK-Hds" firstAttribute="top" secondItem="vCh-p0-aHU" secondAttribute="bottom" id="Ko8-A4-0Iy"/>
                             <constraint firstItem="ZX8-8d-CDX" firstAttribute="centerX" secondItem="dAf-RO-cZZ" secondAttribute="centerX" id="RC4-ru-oks"/>
-                            <constraint firstItem="93d-yj-9ME" firstAttribute="centerX" secondItem="dAf-RO-cZZ" secondAttribute="centerX" id="V0h-fL-KJ4"/>
                             <constraint firstItem="EPc-bK-Hds" firstAttribute="top" secondItem="vCh-p0-aHU" secondAttribute="bottom" id="anV-Ib-gEz"/>
                             <constraint firstAttribute="trailingMargin" secondItem="EPc-bK-Hds" secondAttribute="trailing" constant="-20" id="cLD-l3-cph"/>
                             <constraint firstItem="zgy-Xe-Axw" firstAttribute="top" secondItem="EPc-bK-Hds" secondAttribute="bottom" constant="10" id="ej0-Uk-Mhf"/>
-                            <constraint firstItem="93d-yj-9ME" firstAttribute="centerY" secondItem="dAf-RO-cZZ" secondAttribute="centerY" id="kcQ-se-btN"/>
                             <constraint firstItem="Uq5-6Y-UBA" firstAttribute="top" secondItem="ZX8-8d-CDX" secondAttribute="bottom" constant="12" id="tpf-P3-Cbf"/>
                             <constraint firstItem="zgy-Xe-Axw" firstAttribute="centerX" secondItem="dAf-RO-cZZ" secondAttribute="centerX" id="twa-Rm-0Ab"/>
                             <constraint firstAttribute="trailingMargin" secondItem="vCh-p0-aHU" secondAttribute="trailing" constant="-20" id="zKh-jd-lDF"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="activityInd" destination="93d-yj-9ME" id="YSI-Rm-W0c"/>
                         <outlet property="mapView" destination="vCh-p0-aHU" id="cG7-2X-Imj"/>
                         <outlet property="newCollectionBtn" destination="zgy-Xe-Axw" id="4bC-MC-9IM"/>
                         <outlet property="photoCollectionView" destination="EPc-bK-Hds" id="MOw-6g-ECs"/>
@@ -213,4 +218,7 @@
             <point key="canvasLocation" x="397" y="347"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="placeholder" width="2000" height="1333"/>
+    </resources>
 </document>

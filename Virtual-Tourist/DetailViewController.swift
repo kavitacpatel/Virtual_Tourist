@@ -16,7 +16,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     @IBOutlet weak var newCollectionBtn: UIButton!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var photoCollectionView: UICollectionView!
-    @IBOutlet weak var activityInd: UIActivityIndicatorView!
     var annotation = MKPointAnnotation()
     var coordinate = CLLocationCoordinate2D()
     var lati : NSNumber = 0.0
@@ -71,7 +70,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         photoCollectionView.delegate = self
         photoCollectionView.allowsMultipleSelection = true
         photoCollectionView.alwaysBounceVertical = true
-        showActivityInd(true)
         screenSize = UIScreen.mainScreen().bounds
         screenWidth = screenSize.width
         screenHeight = screenSize.height
@@ -125,6 +123,8 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("imageCell", forIndexPath: indexPath) as! imageCellCollectionViewCell
         cell.backgroundColor = UIColor.blackColor()
+        cell.activityInd.startAnimating()
+        cell.activityInd.hidden = false
         cell.albumImage.image = UIImage(named: "placeholder")
         self.configureCell(cell, atIndexPath: indexPath)
         return cell
@@ -139,12 +139,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
             getFlickrImage(photoDictionary[indexPath.row].valueForKey("farm") as! Int, serverid: photoDictionary[indexPath.row].valueForKey("server") as! String, photoid: photoDictionary[indexPath.row].valueForKey("id") as! String, secret: photoDictionary[indexPath.row].valueForKey("secret") as! String ,completion: { (img) in
                 dispatch_async(dispatch_get_main_queue())
                 {
-                      cell.albumImage.image = img
+                    cell.albumImage.image = img
+                    cell.activityInd.stopAnimating()
+                    cell.activityInd.hidden = true
                 }
                 if indexPath.row == self.photoDictionary.count-1
                 {
                     self.updateStatus = false
-                    self.showActivityInd(false)
                 }
             })
         }
@@ -159,13 +160,14 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                     if let imgName = record!.valueForKey("imagesData") as? String
                     {
                         self.newCollectionBtn.enabled = true
-                        self.showActivityInd(false)
                         let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
                         let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
                         dispatch_async(dispatch_get_main_queue())
                         {
                             let img = UIImage(contentsOfFile: fileURL.path!)
                             cell.albumImage.image = img
+                            cell.activityInd.stopAnimating()
+                            cell.activityInd.hidden = true
                         }
                     }
                 }
@@ -216,7 +218,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-      /*  if photoDictionary.count != 0
+        /*if photoDictionary.count != 0
         {
             return self.photoDictionary.count
         }
@@ -233,13 +235,16 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
     {
-        showActivityInd(true)
         cache?.removeAllObjects()
         photoDictionary.removeAll()
+        updateStatus = false
+        numberOfCell = 10
+        self.photoCollectionView.reloadData()
+        
         //remove old images
         removeAllImages()
         getFlickrData()
-        self.updateStatus = true
+        updateStatus = true
     }
     
     func getFlickrData()
@@ -253,17 +258,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         flickrObj.getFlickrData(currentPageNo, coordinate: coordinate, completion: { (photoDict, error) in
             if photoDict != nil
                 {
-                    dispatch_async(dispatch_get_main_queue())
-                    {
-                            self.photoDictionary = photoDict! as [AnyObject]
+                           self.photoDictionary = photoDict! as [AnyObject]
                            if self.photoDictionary.count == 0
                            {
                              self.newCollectionBtn.enabled = false
-                             self.showActivityInd(false)
                            }
-                        self.numberOfCell = self.photoDictionary.count
+                            self.numberOfCell = self.photoDictionary.count
                             self.photoCollectionView.reloadData()
-                    }
                 }
                 else
                 {
@@ -459,28 +460,15 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
             print( "Can not set new page")
         }
     }
-    func controllerDidChangeContent(controller: NSFetchedResultsController)
+    /*func controllerDidChangeContent(controller: NSFetchedResultsController)
     {
-        photoCollectionView.reloadData()
-    }
+       // photoCollectionView.reloadData()
+    }*/
     
     func alertMsg(title: String, msg: String)
     {
         let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
         alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
         self.presentViewController(alert, animated: true, completion: nil)
-        showActivityInd(false)
-    }
-    func showActivityInd(show: Bool)
-    {
-        activityInd.hidden = !show
-        if show
-        {
-            activityInd.startAnimating()
-        }
-        else
-        {
-            activityInd.stopAnimating()
-        }
     }
 }

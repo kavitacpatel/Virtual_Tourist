@@ -29,12 +29,9 @@ class FlickrApi: AnyObject
             else
             {
              //once location is saved, get images of that location
-                dispatch_async(dispatch_get_main_queue())
-                {
-                    self.getImages(coordinate, data: data!, completion: { (photoDict, error) in
+                  self.getImages(coordinate, data: data!, completion: { (photoDict, error) in
                             completion(photoDict: photoDict!,error: error)
                             })
-                }
             }
         })
         task.resume()

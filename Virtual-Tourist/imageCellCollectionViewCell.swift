@@ -11,5 +11,5 @@ import UIKit
 class imageCellCollectionViewCell: UICollectionViewCell
 {
     @IBOutlet weak var albumImage: UIImageView!
-    
+    @IBOutlet weak var activityInd: UIActivityIndicatorView!
 }
