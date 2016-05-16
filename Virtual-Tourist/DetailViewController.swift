@@ -35,6 +35,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     var photoDictionary = [AnyObject]()
     var updateStatus = false
     var numberOfCell = 10
+    var imgCnt = 0
     
     //Fetch record
     lazy var fetchedResultsController: NSFetchedResultsController? = {
@@ -82,19 +83,33 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         lati = annotation.coordinate.latitude as NSNumber
         long = annotation.coordinate.longitude as NSNumber
         // already images are dowanloaded, fetch from coredata
-    
+            let request = NSFetchRequest(entityName: "Images")
             let predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long) as NSPredicate
             self.fetchedResultsController!.fetchRequest.predicate = predicate
+        do
+        {
+            let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
+            numberOfCell = imageList.count
+           // newCollectionBtn.enabled = true
+            if numberOfCell == 0
+            {
+                numberOfCell = 10
+            }
+        }
+        catch
+        {
+            let fetchError = error as NSError
+            print("\(fetchError), \(fetchError.userInfo)")
+        }
+
             do
             {
                     try self.fetchedResultsController!.performFetch()
-                    newCollectionBtn.enabled = true
                     //self.photoCollectionView.reloadData()
             }
             catch
             {
                     let fetchError = error as NSError
-                     newCollectionBtn.enabled = false
                     print("\(fetchError), \(fetchError.userInfo)")
             }
         mapView.addAnnotation(annotation)
@@ -102,7 +117,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         self.mapView.setRegion(region, animated: true)
         //Clear cachedindex
         cachedImagesIndex.removeAll()
-
+        
     }
     
     //To reduce cell gaps
@@ -131,7 +146,7 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     }
     func configureCell(cell: imageCellCollectionViewCell, atIndexPath indexPath: NSIndexPath)
     {
-        
+        cachedImagesIndex.removeAll()
         if updateStatus
         {
            if photoDictionary.count != 0
@@ -153,25 +168,22 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
         else
         {
             // Fetch Record
-            if fetchedResultsController?.objectAtIndexPath(indexPath).count != 0
-            {
-                if let record: NSManagedObject? = self.fetchedResultsController!.objectAtIndexPath(indexPath) as? NSManagedObject
-                {
-                    if let imgName = record!.valueForKey("imagesData") as? String
+                 if let record: NSManagedObject? = self.fetchedResultsController!.objectAtIndexPath(indexPath) as? NSManagedObject
                     {
-                        self.newCollectionBtn.enabled = true
-                        let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                        let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
-                        dispatch_async(dispatch_get_main_queue())
+                        if let imgName = record!.valueForKey("imagesData") as? String
                         {
-                            let img = UIImage(contentsOfFile: fileURL.path!)
-                            cell.albumImage.image = img
-                            cell.activityInd.stopAnimating()
-                            cell.activityInd.hidden = true
+                            let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+                            let fileURL = documentsURL.URLByAppendingPathComponent(imgName)
+                            dispatch_async(dispatch_get_main_queue())
+                            {
+                                let img = UIImage(contentsOfFile: fileURL.path!)
+                                cell.albumImage.image = img
+                                cell.activityInd.stopAnimating()
+                                cell.activityInd.hidden = true
+                            }
                         }
                     }
-                }
-            }
+            
         }
     }
 
@@ -183,10 +195,27 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
          // show Remove Selected Pictures button
          removePicture.hidden = false
          newCollectionBtn.hidden = true
-            let record = fetchedResultsController!.objectAtIndexPath(indexPath)
-            if let imgName = record.valueForKey("imagesData") as? String
+            var imgname: String?
+            dispatch_async(dispatch_get_main_queue())
             {
-               cachedImagesIndex.append(imgName)
+                //print(cell.)
+                if self.photoDictionary.count != 0
+                {
+                    imgname = self.photoDictionary[indexPath.row].valueForKey("id") as? String
+                    self.cachedImagesIndex.append(imgname!)
+                    print(self.cachedImagesIndex.count)
+                }
+                else
+                {
+                    let record = self.fetchedResultsController!.objectAtIndexPath(indexPath)
+                    imgname = record.valueForKey("imagesData") as? String
+                     if imgname != nil
+                     {
+                        self.cachedImagesIndex.append(imgname!)
+                        print(self.cachedImagesIndex.count)
+                     }
+                    
+                }
             }
         }
     }
@@ -230,11 +259,13 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                 return sectionInfo.numberOfObjects
             }
         }*/
+        print(numberOfCell)
         return numberOfCell
     }
     
     @IBAction func newCollectionBtnPressed(sender: AnyObject)
     {
+        newCollectionBtn.enabled = false
         cache?.removeAllObjects()
         photoDictionary.removeAll()
         updateStatus = false
@@ -331,6 +362,12 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                             do
                             {
                                 try self.managedObjectContext.save()
+                                self.imgCnt = self.imgCnt + 1
+                                print(self.photoDictionary.count)
+                                if self.imgCnt == self.photoDictionary.count
+                                {
+                                    self.newCollectionBtn.enabled = true
+                                }
                                 completion(error: "")
                             }
                             catch
@@ -371,17 +408,18 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                 {
                     //print( "Can not remove from document directory")
                 }
-                do
-                {
-                    managedObjectContext.deleteObject(img)
-                    try managedObjectContext.save()
-                    //first set new pageno than get images
-                    
-                }
-                catch
-                {
-                    print( "Photo Deletion Error")
-                }
+            
+                    do
+                    {
+                        self.managedObjectContext.deleteObject(img)
+                        try self.managedObjectContext.save()
+                        //first set new pageno than get images
+                        
+                    }
+                    catch
+                    {
+                        print( "Photo Deletion Error")
+                    }
             }
         }
         catch
@@ -394,33 +432,37 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
     //remove selected images
     @IBAction func removePictureBtnPressed(sender: AnyObject)
     {
+
         let fileManager:NSFileManager = NSFileManager.defaultManager()
         let request = NSFetchRequest(entityName: "Images")
-        request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
-        do{
-            let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
             if cachedImagesIndex.count > 0
             {
                 for index in 0...cachedImagesIndex.count-1
                 {
-                    for img in imageList
+                    request.predicate = NSPredicate(format: "imagesData like %@",cachedImagesIndex[index])
+                    do
                     {
-                        if cachedImagesIndex[index] == img.valueForKey("imagesData") as! String
+                        let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
+                        for img in imageList
                         {
                             do{
                                 //remove from directory
+                                let imageName = img.valueForKey("imagesData")as! String
                                 let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-                                let fileURL = documentsURL.URLByAppendingPathComponent(cachedImagesIndex[index])
+                                let fileURL = documentsURL.URLByAppendingPathComponent(imageName)
                                 try fileManager.removeItemAtPath(fileURL.path!)
                             }
                             catch
                             {
                                 //print( "Can not remove from document directory")
                             }
+                            
                             do
                             {
-                                managedObjectContext.deleteObject(img)
-                                try managedObjectContext.save()
+                                self.managedObjectContext.deleteObject(img)
+                                try self.managedObjectContext.save()
+                                //first set new pageno than get images
+                                
                             }
                             catch
                             {
@@ -428,13 +470,35 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
                             }
                         }
                     }
+                    catch
+                    {
+                            print( "Photo Deletion Error")
+                    }
                 }
-            }
+        }
+       // numberOfCell
+                    do
+                    {
+                        let request = NSFetchRequest(entityName: "Images")
+                        request.predicate = NSPredicate(format: "pin.latitude == %@ AND pin.longitude == %@", lati, long)
+                            let imageList = try managedObjectContext.executeFetchRequest(request) as! [NSManagedObject]
+                           numberOfCell = imageList.count
+                           print(numberOfCell)
+                    }
+                    catch
+                    {
+                        let fetchError = error as NSError
+                        print("\(fetchError), \(fetchError.userInfo)")
+                    }
+        do
+        {
+            try self.fetchedResultsController!.performFetch()
+            //self.photoCollectionView.reloadData()
         }
         catch
         {
-            cachedImagesIndex.removeAll()
-            print( "Photo is Not Deleted")
+            let fetchError = error as NSError
+            print("\(fetchError), \(fetchError.userInfo)")
         }
         removePicture.hidden = true
         newCollectionBtn.hidden = false
@@ -460,10 +524,6 @@ class DetailViewController: UIViewController , MKMapViewDelegate, UICollectionVi
             print( "Can not set new page")
         }
     }
-    /*func controllerDidChangeContent(controller: NSFetchedResultsController)
-    {
-       // photoCollectionView.reloadData()
-    }*/
     
     func alertMsg(title: String, msg: String)
     {
